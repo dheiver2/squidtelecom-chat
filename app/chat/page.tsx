@@ -1,6 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  ENGINE_NAME,
+  ENGINE_BASE_URL,
+  PRIMARY_MODEL_ID,
+  brandModel,
+  pickModel,
+} from "../lib/mangaba";
 
 type Role = "user" | "assistant";
 interface Message {
@@ -13,8 +20,6 @@ interface Conversation {
   messages: Message[];
 }
 
-const OLLAMA = "http://localhost:11434";
-const PREFERRED_MODEL = "llama3.2";
 const SYSTEM_PROMPT =
   "Você é o Alpha1 Assistant, o assistente virtual inteligente da Alpha 1 Consultoria — " +
   "empresa de telecomunicações, gestão e tecnologia da informação que atende empresas em todo o Brasil. " +
@@ -52,13 +57,13 @@ function renderInline(text: string) {
   return parts;
 }
 
-type OllamaStatus = "checking" | "online" | "offline";
+type EngineStatus = "checking" | "online" | "offline";
 
 export default function ChatPage() {
   const [user, setUser] = useState<string | null>(null);
   const [nameInput, setNameInput] = useState("");
-  const [status, setStatus] = useState<OllamaStatus>("checking");
-  const [model, setModel] = useState(PREFERRED_MODEL);
+  const [status, setStatus] = useState<EngineStatus>("checking");
+  const [model, setModel] = useState(PRIMARY_MODEL_ID);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentId, setCurrentId] = useState<string>("");
@@ -88,17 +93,16 @@ export default function ChatPage() {
     setCurrentId(fresh.id);
   }, []);
 
-  // check Ollama connection
-  async function checkOllama() {
+  // check engine connection
+  async function checkEngine() {
     setStatus("checking");
     try {
-      const res = await fetch(`${OLLAMA}/api/tags`, { cache: "no-store" });
+      const res = await fetch(`${ENGINE_BASE_URL}/api/tags`, { cache: "no-store" });
       if (!res.ok) throw new Error();
       const data = await res.json();
       const names: string[] = (data.models || []).map((m: { name: string }) => m.name);
-      const chosen =
-        names.find((n) => n.startsWith(PREFERRED_MODEL)) || names[0] || PREFERRED_MODEL;
-      setModel(chosen.replace(/:latest$/, ""));
+      if (names.length === 0) throw new Error();
+      setModel(pickModel(names));
       setStatus("online");
     } catch {
       setStatus("offline");
@@ -106,8 +110,8 @@ export default function ChatPage() {
   }
 
   useEffect(() => {
-    checkOllama();
-    const t = setInterval(checkOllama, 8000);
+    checkEngine();
+    const t = setInterval(checkEngine, 8000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -181,7 +185,7 @@ export default function ChatPage() {
     const content = text.trim();
     if (!content || loading) return;
     if (status !== "online") {
-      setError("O Ollama não está conectado. Verifique se ele está rodando no seu computador.");
+      setError(`O ${ENGINE_NAME} não está conectado. Verifique se ele está rodando no seu computador.`);
       return;
     }
     setError("");
@@ -200,7 +204,7 @@ export default function ChatPage() {
     const history = [...messages, userMsg];
 
     try {
-      const res = await fetch(`${OLLAMA}/v1/chat/completions`, {
+      const res = await fetch(`${ENGINE_BASE_URL}/v1/chat/completions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -210,7 +214,7 @@ export default function ChatPage() {
         }),
       });
 
-      if (!res.ok || !res.body) throw new Error("Falha ao gerar resposta no Ollama.");
+      if (!res.ok || !res.body) throw new Error(`Falha ao gerar resposta no ${ENGINE_NAME}.`);
 
       updateCurrent((c) => ({
         ...c,
@@ -289,9 +293,9 @@ export default function ChatPage() {
           </form>
           <div className={`login-status ${status}`}>
             <span className="dot" />
-            {status === "checking" && "Procurando o Ollama..."}
-            {status === "online" && `Ollama conectado (${model})`}
-            {status === "offline" && "Ollama não detectado — instale e inicie para conversar"}
+            {status === "checking" && `Procurando o ${ENGINE_NAME}...`}
+            {status === "online" && `${ENGINE_NAME} conectado (${brandModel(model)})`}
+            {status === "offline" && `${ENGINE_NAME} não detectado — instale e inicie para conversar`}
           </div>
           <a className="login-back" href="/">
             ← Ver instruções de instalação
@@ -396,9 +400,9 @@ export default function ChatPage() {
             </svg>
           </button>
           <div className="model">
-            Alpha1 Assistant <small>{status === "online" ? model : "offline"}</small>
+            Alpha1 Assistant <small>{status === "online" ? brandModel(model) : "offline"}</small>
           </div>
-          <div className={`conn ${status}`} title="Status do Ollama">
+          <div className={`conn ${status}`} title={`Status do ${ENGINE_NAME}`}>
             <span className="dot" />
             {status === "online" ? "Online" : status === "checking" ? "..." : "Offline"}
           </div>
@@ -406,10 +410,9 @@ export default function ChatPage() {
 
         {status === "offline" && (
           <div className="ollama-banner">
-            <strong>Ollama não detectado.</strong> Para conversar, instale e inicie o Ollama no seu
-            computador. <a href="/">Ver instruções</a>. Lembre de iniciar com{" "}
-            <code>OLLAMA_ORIGINS=* ollama serve</code> e depois{" "}
-            <button onClick={checkOllama}>tentar novamente</button>.
+            <strong>{ENGINE_NAME} não detectado.</strong> Para conversar, instale e inicie o{" "}
+            {ENGINE_NAME} no seu computador. <a href="/">Ver instruções de instalação</a>. Depois{" "}
+            <button onClick={checkEngine}>tentar novamente</button>.
           </div>
         )}
 
