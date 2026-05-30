@@ -2,26 +2,35 @@
 // Camada de abstração "Mangaba AI"
 // ------------------------------------------------------------
 // Todo o app fala apenas em "Mangaba AI" e modelos "Mangaba".
-// Esta é a ÚNICA camada que conhece o motor real (Ollama) e os
-// modelos base. Para trocar de backend no futuro, altere só aqui.
+// O motor é o Mangaba (framework brasileiro de orquestração
+// multi-agente), que roda local com o MESMO fluxo do Ollama
+// (API OpenAI-compatible em http://localhost:11434).
 // ============================================================
 
 /** Nome de marca do motor de IA exibido ao usuário. */
 export const ENGINE_NAME = "Mangaba AI";
 
-/** Endpoint do motor local (detalhe de implementação — não exibir). */
-export const ENGINE_BASE_URL = "http://localhost:11434";
+// Endpoints do motor local, em ordem de preferência (detalhe de implementação).
+// HTTPS primeiro: o Safari só aceita https://localhost (mixed content bloqueia
+// http://localhost a partir de uma página HTTPS). Chrome/Edge aceitam ambos, então
+// o http fica como fallback para instalações antigas que ainda não têm certificado.
+export const ENGINE_BASE_URLS = [
+  "https://localhost:11434",
+  "http://localhost:11434",
+] as const;
 
-/** Modelo "oficial" da plataforma (criado localmente via abstração). */
-export const PRIMARY_MODEL_ID = "mangaba-1";
+/** Modelo "oficial" da plataforma servido pelo Mangaba. */
+export const PRIMARY_MODEL_ID = "mangaba-pro";
 
-/** Modelos base aceitos como fallback, em ordem de preferência. */
-const FALLBACK_MODEL_IDS = ["llama3.2", "llama3.1", "llama3"];
+/** Modelos aceitos como fallback, em ordem de preferência. */
+const FALLBACK_MODEL_IDS = ["mangaba-pro", "mangaba-mini", "mangaba-1", "llama3.2", "llama3.1"];
 
-/** Mapa: id do modelo base (motor real) -> nome de marca Mangaba. */
+/** Mapa: id do modelo (motor real) -> nome de marca Mangaba. */
 const MODEL_BRAND: Record<string, string> = {
+  "mangaba-pro": "Mangaba Pro",
+  "mangaba-mini": "Mangaba Mini",
   "mangaba-1": "Mangaba 1",
-  "llama3.2": "Mangaba 1",
+  "llama3.2": "Mangaba Pro",
   "llama3.1": "Mangaba 1 Pro",
   "llama3": "Mangaba 1",
   mistral: "Mangaba Mistral",
@@ -57,17 +66,17 @@ export function pickModel(available: string[]): string {
 // Configuração / instalação (centralizada para a landing page)
 // ------------------------------------------------------------
 
-/** Link de download do motor que executa o Mangaba AI. */
-export const ENGINE_DOWNLOAD_URL = "https://ollama.com/download";
+/** Link de instalação do motor que executa o Mangaba AI. */
+export const ENGINE_DOWNLOAD_URL = "https://mangaba-site.vercel.app";
 
 /** Comandos de configuração do motor Mangaba AI. */
 export function setupCommands(origin: string) {
   return {
-    // Baixa o modelo base e o registra como "Mangaba 1" localmente.
-    pull: "ollama pull llama3.2",
-    brand: "ollama cp llama3.2 mangaba-1",
+    // Instala o framework Mangaba e baixa o modelo oficial.
+    install: "pip install mangaba",
+    pull: `mangaba pull ${PRIMARY_MODEL_ID}`,
     // Inicia o motor liberando o acesso da plataforma (navegador).
-    serve: `OLLAMA_ORIGINS=${origin} ollama serve`,
-    serveWindows: `$env:OLLAMA_ORIGINS="${origin}"; ollama serve`,
+    serve: `MANGABA_ORIGINS=${origin} mangaba serve`,
+    serveWindows: `$env:MANGABA_ORIGINS="${origin}"; mangaba serve`,
   };
 }

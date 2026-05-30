@@ -1,6 +1,8 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+import { readSession } from "../../lib/auth";
+
 const SYSTEM_PROMPT =
   "Você é o Alpha1 Assistant, o assistente virtual inteligente da Alpha 1 Consultoria — " +
   "empresa de telecomunicações, gestão e tecnologia da informação que atende empresas em todo o Brasil. " +
@@ -10,9 +12,17 @@ const SYSTEM_PROMPT =
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
 export async function POST(req: Request) {
-  // Ollama (IA gratuita, local) não exige chave. Para provedores que exigem
+  // Só usuários autenticados (os 20 funcionários) podem usar a IA.
+  if (!readSession(req.headers.get("cookie"))) {
+    return new Response(JSON.stringify({ error: "Sessão expirada. Entre novamente." }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  // O motor (Mangaba via túnel) não exige chave. Para provedores que exigem
   // (OpenAI, Groq, etc.) defina OPENAI_API_KEY; caso contrário usamos um placeholder.
-  const apiKey = process.env.OPENAI_API_KEY || "ollama";
+  const apiKey = process.env.OPENAI_API_KEY || "mangaba";
 
   let messages: ChatMessage[];
   try {
@@ -26,9 +36,9 @@ export async function POST(req: Request) {
     });
   }
 
-  // Padrão: Ollama local (http://localhost:11434/v1) com o modelo llama3.2.
+  // Padrão: Mangaba local (http://localhost:11434/v1) com o modelo mangaba-pro.
   const baseUrl = (process.env.OPENAI_BASE_URL || "http://localhost:11434/v1").replace(/\/$/, "");
-  const model = process.env.OPENAI_MODEL || "llama3.2";
+  const model = process.env.OPENAI_MODEL || "mangaba-pro";
 
   let upstream: Response;
   try {
@@ -48,8 +58,8 @@ export async function POST(req: Request) {
     return new Response(
       JSON.stringify({
         error:
-          "Não foi possível conectar ao Ollama. Verifique se ele está rodando (`ollama serve`) e se o modelo foi baixado (`ollama pull llama3.2`). " +
-          "Em deploy na Vercel, o Ollama precisa estar exposto por um túnel público (veja o README).",
+          "Não foi possível conectar ao Mangaba. Verifique se ele está rodando (`mangaba serve`) e se o modelo foi baixado (`mangaba pull mangaba-pro`). " +
+          "Em deploy na Vercel, o Mangaba precisa estar exposto por um túnel público (veja o README).",
       }),
       { status: 502, headers: { "Content-Type": "application/json" } }
     );

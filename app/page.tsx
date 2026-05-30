@@ -1,138 +1,331 @@
 "use client";
 
-import { useState } from "react";
-import { ENGINE_NAME, ENGINE_DOWNLOAD_URL, setupCommands } from "./lib/mangaba";
+import { useEffect, useState } from "react";
+import { ENGINE_NAME } from "./lib/mangaba";
 
-function CodeLine({ cmd }: { cmd: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <div className="code-line">
-      <code>{cmd}</code>
-      <button
-        onClick={() => {
-          navigator.clipboard?.writeText(cmd);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        }}
-      >
-        {copied ? "Copiado!" : "Copiar"}
-      </button>
-    </div>
-  );
-}
+const SITE = "http://alpha1consultoria.com";
+const WHATSAPP = "https://wa.me/8230750101";
+const INSTAGRAM = "https://www.instagram.com/alpha1consultoria_/";
+const LINKEDIN = "https://www.linkedin.com/company/alpha1consultoria/posts/?feedView=all";
 
 export default function Landing() {
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "https://alpha1-chat.vercel.app";
-  const cmd = setupCommands(origin);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const els = document.querySelectorAll<HTMLElement>(".reveal");
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in-view");
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -60px 0px" }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
 
   return (
-    <div className="lp">
-      <header className="lp-nav">
-        <div className="lp-brand">
-          <img src="/logo-alpha1.png" alt="Alpha 1" />
-          <span>Alpha1 Assistant</span>
-        </div>
-        <a className="lp-btn-outline" href="/chat">
-          Entrar
-        </a>
+    <div className={`site${menuOpen ? " menu-active" : ""}`}>
+      <header className="site-header">
+        <nav className="site-navbar">
+          <button
+            className="nav-toggle"
+            aria-label="Abrir menu"
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <span className="hamburger" />
+          </button>
+
+          <a href={SITE} className="navbar-logo">
+            <img src="/logo-alpha1.png" alt="Alpha 1 Consultoria" className="logo-img" />
+          </a>
+
+          <ul className="nav-list">
+            <li className="nav-item">
+              <a href={`${SITE}/index.html`} className="nav-link">
+                Home
+              </a>
+            </li>
+            <li className="nav-item">
+              <a href={`${SITE}/servicos.html`} className="nav-link">
+                Nossos Serviços
+              </a>
+            </li>
+            <li className="nav-item">
+              <a href={`${SITE}/sobre.html`} className="nav-link">
+                Sobre
+              </a>
+            </li>
+            <li className="nav-item">
+              <a href={`${SITE}/contato.html`} className="nav-link">
+                Contato
+              </a>
+            </li>
+            <li className="nav-item">
+              <a href="/chat" className="nav-link nav-link-cta">
+                Entrar
+              </a>
+            </li>
+          </ul>
+        </nav>
       </header>
 
-      <section className="lp-hero">
-        <div className="lp-badge">IA 100% gratuita e local com {ENGINE_NAME}</div>
-        <h1>
-          Seu assistente de IA, <span>privado</span> e sem custos
-        </h1>
-        <p>
-          O Alpha1 Assistant roda na sua própria máquina com o {ENGINE_NAME}. Suas conversas nunca
-          saem do seu computador. Sem mensalidade, sem chave de API, sem limites.
-        </p>
-        <div className="lp-cta">
-          <a className="lp-btn" href="#instalar">
-            Como começar
-          </a>
-          <a className="lp-btn-ghost" href="/chat">
-            Já instalei, entrar →
-          </a>
+      {/* ===================== HERO ===================== */}
+      <section className="hero">
+        <div className="hero-decor" aria-hidden="true">
+          <span className="orb orb-1" />
+          <span className="orb orb-2" />
+          <span className="grid-overlay" />
+        </div>
+
+        <div className="hero-inner">
+          <div className="hero-copy">
+            <span className="hero-badge">
+              <span className="hero-badge-dot" />
+              {ENGINE_NAME} · IA corporativa da Alpha 1
+            </span>
+
+            <h1 className="hero-title">
+              O assistente de IA <span className="hero-highlight">corporativo</span> da Alpha 1
+            </h1>
+
+            <p className="hero-lead">
+              Inteligência artificial personalizada, treinada para o universo de telecomunicações,
+              gestão e tecnologia da informação da Alpha 1. Privada, especializada e sempre
+              disponível para a sua equipe e os seus clientes.
+            </p>
+
+            <div className="hero-cta">
+              <a className="btn-primary btn-lg" href="/chat">
+                Entrar na plataforma
+                <span className="btn-arrow">→</span>
+              </a>
+              <a className="btn-ghost btn-lg" href={WHATSAPP} target="_blank" rel="noreferrer">
+                Falar com a Alpha 1
+              </a>
+            </div>
+
+            <div className="hero-stats">
+              <div className="hero-stat">
+                <span className="hero-stat-num">24h</span>
+                <span className="hero-stat-label">Disponível sempre</span>
+              </div>
+              <span className="hero-stat-sep" />
+              <div className="hero-stat">
+                <span className="hero-stat-num">100%</span>
+                <span className="hero-stat-label">Privado e seguro</span>
+              </div>
+              <span className="hero-stat-sep" />
+              <div className="hero-stat">
+                <span className="hero-stat-num">Sob medida</span>
+                <span className="hero-stat-label">Para a Alpha 1</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Mockup de conversa */}
+          <div className="hero-visual">
+            <div className="chat-mock">
+              <div className="chat-mock-bar">
+                <span className="chat-mock-dots">
+                  <i /><i /><i />
+                </span>
+                <span className="chat-mock-title">{ENGINE_NAME}</span>
+                <span className="chat-mock-online">
+                  <span className="dot" /> Online
+                </span>
+              </div>
+              <div className="chat-mock-body">
+                <div className="mock-bubble mock-bot">
+                  Olá! Sou o {ENGINE_NAME}, assistente da Alpha 1. Como posso ajudar hoje?
+                </div>
+                <div className="mock-bubble mock-user">
+                  Quais serviços de telecom a Alpha 1 oferece?
+                </div>
+                <div className="mock-bubble mock-bot mock-typing">
+                  <span className="typing">
+                    <i /><i /><i />
+                  </span>
+                </div>
+              </div>
+              <div className="chat-mock-input">
+                <span>Pergunte alguma coisa…</span>
+                <span className="chat-mock-send">→</span>
+              </div>
+            </div>
+            <div className="mock-float mock-float-1">
+              <span className="mock-float-icon">🔒</span> Dados privados
+            </div>
+            <div className="mock-float mock-float-2">
+              <span className="mock-float-icon">⚡</span> Resposta instantânea
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="lp-features">
-        <div className="lp-card">
-          <div className="lp-ico">🔒</div>
-          <h3>Privado</h3>
-          <p>A IA roda localmente. Nenhuma mensagem é enviada para servidores externos.</p>
-        </div>
-        <div className="lp-card">
-          <div className="lp-ico">💸</div>
-          <h3>Gratuito</h3>
-          <p>Sem assinatura e sem chave de API paga. O {ENGINE_NAME} é open-source e grátis.</p>
-        </div>
-        <div className="lp-card">
-          <div className="lp-ico">⚡</div>
-          <h3>Sem limites</h3>
-          <p>Converse à vontade. A velocidade depende apenas do seu computador.</p>
-        </div>
-      </section>
+      <main className="site-main">
+        {/* ===================== VANTAGENS ===================== */}
+        <section className="vantagens reveal">
+          <p className="eyebrow">Por que a Alpha 1</p>
+          <h2 className="titulo-secao">
+            Uma IA <span>feita sob medida</span> para a sua operação
+          </h2>
 
-      <section className="lp-steps" id="instalar">
-        <h2>Comece em 3 passos</h2>
-        <p className="lp-sub">Você só precisa fazer isso uma vez.</p>
+          <div className="vantagens-lista">
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 2l7 3v6c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V5l7-3z"
+                    stroke="#fff"
+                    strokeWidth="1.8"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M9 12l2 2 4-4"
+                    stroke="#fff"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <h3>Privado e seguro</h3>
+              <p>As conversas ficam no ambiente da Alpha 1, sem expor dados a serviços de terceiros.</p>
+            </div>
 
-        <div className="lp-step">
-          <div className="lp-num">1</div>
-          <div className="lp-step-body">
-            <h3>Instale o {ENGINE_NAME}</h3>
-            <p>Disponível para macOS, Windows e Linux. É rápido e gratuito.</p>
-            <a className="lp-btn" href={ENGINE_DOWNLOAD_URL} target="_blank" rel="noreferrer">
-              Baixar o {ENGINE_NAME}
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 3l2.09 4.26L18.8 8l-3.4 3.32.8 4.68L12 13.8 7.8 16l.8-4.68L5.2 8l4.71-.74L12 3z"
+                    stroke="#fff"
+                    strokeWidth="1.8"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <h3>Personalizado</h3>
+              <p>Treinado com o conhecimento, os serviços e a linguagem da Alpha 1 Consultoria.</p>
+            </div>
+
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.8" />
+                  <path
+                    d="M12 7v5l3.5 2"
+                    stroke="#fff"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <h3>Disponível 24h</h3>
+              <p>Respostas rápidas e especializadas para a sua equipe e os seus clientes, a qualquer hora.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================== COMO FUNCIONA ===================== */}
+        <section className="passos reveal" id="como-funciona">
+          <p className="eyebrow">Simples assim</p>
+          <h2 className="titulo-secao">
+            Como <span>funciona</span>
+          </h2>
+          <p className="passos-sub">Sem instalação. Você entra e já começa a conversar.</p>
+
+          <div className="passos-lista">
+            <div className="passo">
+              <div className="passo-num">1</div>
+              <div className="passo-body">
+                <h3>Acesse a plataforma</h3>
+                <p>Entre com o seu usuário e senha. Não é preciso instalar nada nem configurar chaves.</p>
+              </div>
+            </div>
+
+            <div className="passo">
+              <div className="passo-num">2</div>
+              <div className="passo-body">
+                <h3>Faça a sua pergunta</h3>
+                <p>
+                  Pergunte sobre serviços, processos e atendimento da Alpha 1 em linguagem natural — o{" "}
+                  {ENGINE_NAME} entende o contexto do seu negócio.
+                </p>
+              </div>
+            </div>
+
+            <div className="passo">
+              <div className="passo-num">3</div>
+              <div className="passo-body">
+                <h3>Receba respostas especializadas</h3>
+                <p>Orientações claras e contextualizadas, prontas para usar com a sua equipe e clientes.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================== CTA BAND ===================== */}
+        <section className="cta-band reveal">
+          <div className="cta-band-decor" aria-hidden="true">
+            <span className="orb orb-3" />
+          </div>
+          <div className="cta-band-inner">
+            <h2>Pronto para conversar com a IA da Alpha 1?</h2>
+            <p>Atendimento inteligente da Alpha 1, sempre que você precisar.</p>
+            <a className="btn-light btn-lg" href="/chat">
+              Entrar na plataforma <span className="btn-arrow">→</span>
             </a>
-            <p className="lp-hint">
-              O {ENGINE_NAME} é executado pelo motor open-source <code>Ollama</code>.
-            </p>
           </div>
-        </div>
+        </section>
+      </main>
 
-        <div className="lp-step">
-          <div className="lp-num">2</div>
-          <div className="lp-step-body">
-            <h3>Baixe o modelo Mangaba 1</h3>
-            <p>Abra o Terminal (ou Prompt de Comando) e rode:</p>
-            <CodeLine cmd={cmd.pull} />
-            <CodeLine cmd={cmd.brand} />
+      <a
+        href={WHATSAPP}
+        className="whatsapp-button"
+        target="_blank"
+        rel="noreferrer"
+        title="Fale conosco no WhatsApp"
+      >
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="#fff">
+          <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0012.04 2zm0 18.13h-.01c-1.52 0-3.01-.41-4.3-1.18l-.31-.18-3.12.82.83-3.04-.2-.31a8.23 8.23 0 01-1.26-4.35c0-4.54 3.7-8.23 8.25-8.23 2.2 0 4.27.86 5.82 2.42a8.18 8.18 0 012.41 5.82c0 4.54-3.7 8.23-8.24 8.23zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.25-.64.81-.78.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.72-.14-.25-.01-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.43-.14-.01-.31-.01-.48-.01s-.43.06-.66.31c-.23.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.24 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.14-1.18-.06-.1-.22-.16-.47-.28z" />
+        </svg>
+      </a>
+
+      <footer className="site-footer">
+        <div className="footer-info">
+          <div className="footer-brand">
+            <img src="/logo-alpha1.png" alt="Alpha 1 Consultoria" />
           </div>
-        </div>
-
-        <div className="lp-step">
-          <div className="lp-num">3</div>
-          <div className="lp-step-body">
-            <h3>Inicie o {ENGINE_NAME} liberando o acesso do navegador</h3>
-            <p>
-              Para que a plataforma converse com o {ENGINE_NAME} no seu computador, inicie-o assim
-              (mantenha esse terminal aberto enquanto usar):
-            </p>
-            <CodeLine cmd={cmd.serve} />
-            <p className="lp-hint">
-              No Windows (PowerShell): <code>{cmd.serveWindows}</code>
-            </p>
+          <p className="footer-tagline">
+            Telecomunicações · Gestão · Tecnologia da Informação — atendimento em todo o Brasil.
+          </p>
+          <div className="social-links">
+            <a href={INSTAGRAM} target="_blank" rel="noreferrer" className="social-link" aria-label="Instagram">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="3" width="18" height="18" rx="5" stroke="#fff" strokeWidth="1.8" />
+                <circle cx="12" cy="12" r="4" stroke="#fff" strokeWidth="1.8" />
+                <circle cx="17.5" cy="6.5" r="1.2" fill="#fff" />
+              </svg>
+            </a>
+            <a href={WHATSAPP} target="_blank" rel="noreferrer" className="social-link" aria-label="WhatsApp">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
+                <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0012.04 2zm5.52 11.97c-.21.58-1.2 1.11-1.68 1.18-.43.06-.97.09-1.56-.1-.36-.11-.82-.26-1.41-.52-2.49-1.07-4.12-3.57-4.24-3.74-.12-.16-1.01-1.34-1.01-2.56 0-1.22.63-1.82.86-2.07.23-.25.5-.31.66-.31s.34 0 .48.01c.15.01.36-.05.56.43.2.5.7 1.72.76 1.84.06.12.1.26.02.43-.09.16-.13.27-.25.41-.12.14-.26.32-.37.43-.12.13-.25.26-.11.51.15.25.64 1.06 1.38 1.72.94.84 1.74 1.11 1.99 1.23.25.13.4.11.54-.06.14-.16.62-.72.78-.97.17-.25.33-.21.56-.13.22.09 1.44.69 1.69.81.25.12.41.18.47.28.07.11.07.6-.14 1.18z" />
+              </svg>
+            </a>
+            <a href={LINKEDIN} target="_blank" rel="noreferrer" className="social-link" aria-label="LinkedIn">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
+                <path d="M4.98 3.5a2.5 2.5 0 11-.02 5.01A2.5 2.5 0 014.98 3.5zM3 8.98h4V21H3V8.98zM9.5 8.98h3.84v1.64h.05c.53-1 1.84-2.06 3.79-2.06 4.05 0 4.8 2.67 4.8 6.14V21h-4v-5.4c0-1.29-.02-2.95-1.8-2.95-1.8 0-2.08 1.4-2.08 2.85V21h-4V8.98z" />
+              </svg>
+            </a>
           </div>
+          <p className="footer-copy">© 2026 Alpha 1 Consultoria. {ENGINE_NAME} — assistente de IA corporativo.</p>
         </div>
-
-        <div className="lp-finish">
-          <a className="lp-btn lp-btn-lg" href="/chat">
-            Entrar na plataforma →
-          </a>
-          <p>A plataforma detecta o {ENGINE_NAME} automaticamente assim que ele estiver rodando.</p>
-        </div>
-      </section>
-
-      <footer className="lp-footer">
-        <div className="lp-brand">
-          <img src="/logo-alpha1.png" alt="Alpha 1" />
-          <span>Alpha 1 Consultoria</span>
-        </div>
-        <p>Telecomunicações · Gestão · Tecnologia da Informação — atendimento em todo o Brasil.</p>
-        <p className="lp-copy">© 2026 Alpha 1. Assistente de IA com tecnologia {ENGINE_NAME}.</p>
       </footer>
     </div>
   );

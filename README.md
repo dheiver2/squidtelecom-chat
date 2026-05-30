@@ -3,7 +3,7 @@
 Clone do ChatGPT com a identidade visual da **Alpha 1 Consultoria** (telecom, gestão e TI).
 Paleta azul e branco extraída de [alpha1consultoria.com](http://alpha1consultoria.com).
 Construído em **Next.js 14** (App Router) com respostas em streaming.
-Usa **Ollama** (IA 100% gratuita e local) por padrão.
+Usa **Mangaba** (IA 100% gratuita e local, mesmo fluxo do Ollama) por padrão.
 
 ## Paleta de cores
 
@@ -17,17 +17,50 @@ Usa **Ollama** (IA 100% gratuita e local) por padrão.
 
 Fonte: **Open Sans** (mesma do site institucional).
 
-## IA gratuita com Ollama
+## IA gratuita com Mangaba
 
-1. Instale o Ollama: https://ollama.com/download
-2. Baixe um modelo e deixe o servidor rodando:
+O **Mangaba** é um framework brasileiro de orquestração multi-agente que roda na sua
+máquina com o **mesmo fluxo do Ollama** (API OpenAI-compatible em `http://localhost:11434`).
+Cada funcionário roda o Mangaba no próprio computador — os dados não saem da máquina.
+
+### Instalação em 1 comando (Mac, Windows e Linux)
+
+Os instaladores criam um ambiente isolado, baixam o modelo e já iniciam o servidor local.
+
+**macOS / Linux** (Terminal):
 
 ```bash
-ollama pull llama3.2     # ~2 GB, rápido. (ou: mistral, qwen2.5, phi3...)
-ollama serve             # expõe a API em http://localhost:11434
+curl -fsSL https://mangaba-site.vercel.app/install.sh | bash
 ```
 
-O app já vem configurado para falar com o Ollama (`.env.local`). Sem chave, sem custo.
+**Windows** (PowerShell):
+
+```powershell
+irm https://mangaba-site.vercel.app/install.ps1 | iex
+```
+
+> Requer Python 3.8+ (no Windows o instalador tenta instalar via `winget`). O modelo
+> padrão é o `mangaba-mini` (~470 MB, roda em CPU, sem GPU). O servidor sobe em
+> `localhost:11434` e o app já vem configurado para falar com ele. Sem chave, sem custo.
+
+### Safari (macOS)
+
+O Safari bloqueia páginas `https` de chamarem `http://localhost` (mixed content), ao contrário
+de Chrome e Edge. Por isso, **no macOS** o instalador usa o [mkcert](https://github.com/FiloSottile/mkcert)
+para gerar um certificado local confiável e o motor passa a servir em **`https://localhost:11434`**.
+Na primeira instalação o macOS pede sua senha **uma vez** para confiar nesse certificado (a chave
+privada nunca sai da sua máquina). Depois disso, Safari, Chrome, Edge e Firefox conectam normalmente.
+No Windows e Linux não há Safari, então o motor segue em `http://localhost:11434` (Chrome/Edge/Firefox
+aceitam). O app tenta `https` e cai para `http` automaticamente.
+
+### Manual (qualquer SO com Python)
+
+```bash
+pip install --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu \
+  https://mangaba-site.vercel.app/dl/mangaba_mini-0.1.0-py3-none-any.whl
+python -m mangaba_mini pull mangaba-mini
+python -m mangaba_mini serve
+```
 
 ## Rodar localmente
 
@@ -36,15 +69,15 @@ npm install
 npm run dev
 ```
 
-Acesse http://localhost:3000 (com o Ollama rodando em paralelo).
+Acesse http://localhost:3000 (com o Mangaba rodando em paralelo).
 
 ## Deploy na Vercel
 
-⚠️ **Importante:** o Ollama roda na *sua máquina* (`localhost`). Uma função serverless
+⚠️ **Importante:** o Mangaba roda na *sua máquina* (`localhost`). Uma função serverless
 na Vercel **não enxerga o seu localhost**. Você tem 3 caminhos:
 
-### Opção A — Ollama exposto por túnel (mantém Ollama + Vercel)
-Exponha seu Ollama na internet e aponte a Vercel para ele:
+### Opção A — Mangaba exposto por túnel (mantém Mangaba + Vercel)
+Exponha seu Mangaba na internet e aponte a Vercel para ele:
 
 ```bash
 # exemplo com cloudflared (gratuito)
@@ -54,9 +87,9 @@ cloudflared tunnel --url http://localhost:11434
 
 Na Vercel → **Settings → Environment Variables**:
 - `OPENAI_BASE_URL` = `https://algo.trycloudflare.com/v1`
-- `OPENAI_MODEL` = `llama3.2`
+- `OPENAI_MODEL` = `mangaba-pro`
 
-Sua máquina precisa ficar ligada com `ollama serve` + o túnel ativos.
+Sua máquina precisa ficar ligada com `mangaba serve` + o túnel ativos.
 
 ### Opção B — Groq (gratuito e hospedado, recomendado para Vercel)
 Não precisa deixar nada ligado. Crie uma chave em https://console.groq.com e configure:
@@ -65,7 +98,7 @@ Não precisa deixar nada ligado. Crie uma chave em https://console.groq.com e co
 - `OPENAI_API_KEY` = sua chave Groq
 
 ### Opção C — Rodar 100% local
-Não fazer deploy e usar apenas `npm run dev` com o Ollama. Grátis e privado.
+Não fazer deploy e usar apenas `npm run dev` com o Mangaba. Grátis e privado.
 
 Passos do deploy em si:
 1. Suba o projeto para um repositório no GitHub.
