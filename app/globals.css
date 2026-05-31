@@ -77,6 +77,32 @@ body {
   transition: margin-left 0.25s ease;
 }
 
+/* Botão de recolher na sidebar (desktop) */
+.collapse-btn {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--texto-suave);
+  padding: 5px;
+  border-radius: 7px;
+  display: flex;
+}
+.collapse-btn:hover { background: var(--hover); color: var(--texto); }
+
+/* Botão de expandir na topbar — só aparece quando colapsada (desktop) */
+.expand-toggle { display: none; }
+
+/* Sidebar colapsada no DESKTOP: desliza para fora e mostra o botão expandir */
+@media (min-width: 769px) {
+  .layout.sidebar-collapsed .sidebar {
+    margin-left: -261px;
+  }
+  .layout.sidebar-collapsed .expand-toggle {
+    display: flex;
+  }
+}
+
 .sidebar-top {
   padding: 12px;
   display: flex;
@@ -1197,6 +1223,10 @@ body {
   .greeting h1 {
     font-size: 1.4rem;
   }
+
+  /* Sidebar é drawer no mobile — colapso desktop não se aplica */
+  .collapse-btn { display: none; }
+  .expand-toggle { display: none !important; }
 
   /* Topbar enxuta no celular */
   .topbar { gap: 4px; padding: 0 8px; }

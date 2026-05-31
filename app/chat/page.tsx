@@ -160,6 +160,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // colapso no desktop
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Aborta a geração em curso (botão parar).
@@ -194,6 +195,8 @@ export default function ChatPage() {
     const preferred = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     setTheme(preferred);
     document.documentElement.setAttribute("data-theme", preferred);
+    // Estado de colapso da sidebar (desktop)
+    setSidebarCollapsed(localStorage.getItem("a1-sidebar-collapsed") === "1");
   }, []);
 
   function toggleTheme() {
@@ -201,6 +204,14 @@ export default function ChatPage() {
     setTheme(next);
     document.documentElement.setAttribute("data-theme", next);
     localStorage.setItem("a1-theme", next);
+  }
+
+  function toggleSidebarCollapsed() {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("a1-sidebar-collapsed", next ? "1" : "0");
+      return next;
+    });
   }
 
   // restaura sessão (cookie httpOnly) no carregamento
@@ -945,7 +956,7 @@ export default function ChatPage() {
   );
 
   return (
-    <div className={`layout${sidebarOpen ? " sidebar-open" : ""}`}>
+    <div className={`layout${sidebarOpen ? " sidebar-open" : ""}${sidebarCollapsed ? " sidebar-collapsed" : ""}`}>
       <div className="overlay" onClick={() => setSidebarOpen(false)} />
 
       <aside className="sidebar">
@@ -953,6 +964,18 @@ export default function ChatPage() {
           <div className="brand">
             <img src="/logo-alpha1.png" alt="Alpha 1" />
             <span>Alpha1 Assistant</span>
+            <button
+              className="collapse-btn"
+              onClick={toggleSidebarCollapsed}
+              aria-label="Recolher menu"
+              title="Recolher menu"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+                <path d="M9 4v16" stroke="currentColor" strokeWidth="1.8"/>
+                <path d="M14 9l-2 3 2 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
           </div>
           <button className="new-chat" onClick={newChat}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -1067,6 +1090,14 @@ export default function ChatPage() {
           <button className="icon-btn menu-toggle" onClick={() => setSidebarOpen(true)} aria-label="Abrir menu">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+          {/* Reabrir sidebar quando colapsada (desktop) */}
+          <button className="icon-btn expand-toggle" onClick={toggleSidebarCollapsed} aria-label="Expandir menu" title="Expandir menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+              <path d="M9 4v16" stroke="currentColor" strokeWidth="1.8"/>
+              <path d="M12 9l2 3-2 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
           <div className="model">
