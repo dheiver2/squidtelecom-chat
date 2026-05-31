@@ -51,9 +51,16 @@ describe("rateLimit (sliding window in-memory)", () => {
 });
 
 describe("getIp", () => {
-  it("extrai o primeiro IP de x-forwarded-for", () => {
+  it("usa o IP mais à direita de x-forwarded-for (não confia no valor à esquerda, que é spoofável)", () => {
     const req = new Request("http://x", { headers: { "x-forwarded-for": "1.2.3.4, 5.6.7.8" } });
-    expect(getIp(req)).toBe("1.2.3.4");
+    expect(getIp(req)).toBe("5.6.7.8");
+  });
+
+  it("prefere headers confiáveis da plataforma sobre x-forwarded-for", () => {
+    const req = new Request("http://x", {
+      headers: { "x-forwarded-for": "1.2.3.4", "x-real-ip": "9.9.9.9" },
+    });
+    expect(getIp(req)).toBe("9.9.9.9");
   });
 
   it("cai para 'unknown' sem headers", () => {

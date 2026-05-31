@@ -7,6 +7,16 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 
 const SECRET = process.env.SESSION_SECRET || "";
+
+// Falha cedo em produção: sem um segredo forte, os tokens de sessão poderiam
+// ser forjados (HMAC com chave vazia) e o login entraria em loop silencioso
+// (cookie assinado mas nunca validado). Em dev permitimos a ausência.
+if (process.env.NODE_ENV === "production" && SECRET.length < 32) {
+  throw new Error(
+    "SESSION_SECRET ausente ou muito curto (mínimo 32 caracteres) — configure nas env vars."
+  );
+}
+
 const COOKIE = "a1_session";
 const MAX_AGE = 60 * 60 * 12; // 12 horas
 const BCRYPT_ROUNDS = 12;

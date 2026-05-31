@@ -100,11 +100,23 @@ export const LIMITS = {
 } as const;
 
 export function getIp(req: Request): string {
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "unknown"
-  );
+  // Em Vercel/Caddy o IP real do cliente é injetado pela plataforma em
+  // headers confiáveis (`x-vercel-forwarded-for` / `x-real-ip`). NÃO usamos o
+  // primeiro valor de `x-forwarded-for`: ele é o elemento mais à esquerda da
+  // cadeia e é controlável pelo cliente, permitindo burlar o rate limit (ex.:
+  // brute-force de login) rotacionando o header. Como fallback, pegamos o
+  // valor mais à DIREITA do XFF (o salto mais próximo/confiável).
+  const trusted =
+    req.headers.get("x-vercel-forwarded-for") ||
+    req.headers.get("x-real-ip");
+  if (trusted) return trusted.trim();
+
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) {
+    const parts = xff.split(",").map((s) => s.trim()).filter(Boolean);
+    if (parts.length) return parts[parts.length - 1];
+  }
+  return "unknown";
 }
 
 /** Retorna uma Response 429 padronizada. */

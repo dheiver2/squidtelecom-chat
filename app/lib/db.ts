@@ -138,6 +138,9 @@ export async function upsertConversation(
   messages: unknown[],
   model: string | null
 ) {
+  // O WHERE no DO UPDATE garante que só o DONO da conversa pode sobrescrevê-la:
+  // se o id já existe e pertence a outro usuário, o UPDATE é ignorado (no-op),
+  // impedindo IDOR de escrita entre usuários.
   await query(
     `INSERT INTO conversations (id, username, title, messages, model, updated_at)
      VALUES ($1, $2, $3, $4, $5, NOW())
@@ -145,7 +148,8 @@ export async function upsertConversation(
        title      = EXCLUDED.title,
        messages   = EXCLUDED.messages,
        model      = EXCLUDED.model,
-       updated_at = NOW()`,
+       updated_at = NOW()
+     WHERE conversations.username = EXCLUDED.username`,
     [id, username, title, JSON.stringify(messages), model]
   );
 }

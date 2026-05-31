@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { readSession } from "../../lib/auth";
 import { listConversations, upsertConversation, migrateConversations } from "../../lib/db";
+import { validateConversationInput } from "../../lib/conversation-validate";
 
 export async function GET(req: Request) {
   const username = readSession(req.headers.get("cookie"));
@@ -23,8 +24,14 @@ export async function POST(req: Request) {
   try {
     const { id, title, messages, model } = await req.json();
     if (!id || typeof id !== "string") return Response.json({ error: "id inválido" }, { status: 400 });
+    let clean;
+    try {
+      clean = validateConversationInput(title, messages, model);
+    } catch (err) {
+      return Response.json({ error: (err as Error).message }, { status: 400 });
+    }
     await migrateConversations();
-    await upsertConversation(id, username, title || "Nova conversa", messages || [], model ?? null);
+    await upsertConversation(id, username, clean.title, clean.messages, clean.model);
     return Response.json({ ok: true }, { status: 201 });
   } catch (e) {
     console.error("create conversation error", e);
