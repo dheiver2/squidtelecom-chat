@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { ENGINE_NAME } from "./lib/mangaba";
 
 const SITE = "http://alpha1consultoria.com";
-const WHATSAPP = "https://wa.me/8230750101";
+const WHATSAPP = "https://wa.me/5582999825657";
 const INSTAGRAM = "https://www.instagram.com/alpha1consultoria_/";
 const LINKEDIN = "https://www.linkedin.com/company/alpha1consultoria/posts/?feedView=all";
 
