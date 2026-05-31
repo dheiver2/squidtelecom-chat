@@ -1,7 +1,9 @@
-export const runtime = "nodejs";
+// Edge Runtime: sem cold start (~200-500ms poupados por request),
+// executa na rede da Vercel mais próxima do usuário.
+export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
-import { readSession } from "../../lib/auth";
+import { readSessionEdge } from "../../lib/auth-edge";
 import { rateLimit, LIMITS, tooManyRequests } from "../../lib/ratelimit";
 
 const SYSTEM_PROMPT =
@@ -10,13 +12,15 @@ const SYSTEM_PROMPT =
   "Responda sempre em português do Brasil, de forma clara, profissional e prestativa. " +
   "Use markdown quando ajudar na leitura.";
 
-const MAX_MESSAGES = 100;
-const MAX_MSG_LENGTH = 32_000; // chars (~8k tokens)
+// Janela de contexto enviada ao modelo.
+// Manter curto = prefill mais rápido = primeiro token mais rápido.
+const MAX_HISTORY_MSGS = 20;   // últimas 20 mensagens (10 trocas)
+const MAX_MSG_LENGTH = 32_000; // chars por mensagem
 
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
 export async function POST(req: Request) {
-  const username = readSession(req.headers.get("cookie"));
+  const username = await readSessionEdge(req.headers.get("cookie"));
   if (!username) {
     return new Response(JSON.stringify({ error: "Sessão expirada. Entre novamente." }), {
       status: 401,
@@ -24,7 +28,7 @@ export async function POST(req: Request) {
     });
   }
 
-  // Rate limiting: 30 msgs / min por usuário autenticado
+  // Rate limiting: 30 msgs / min por usuário
   const rl = await rateLimit(`chat:${username}`, LIMITS.chat.limit, LIMITS.chat.windowSecs);
   if (!rl.allowed) return tooManyRequests(rl.resetAt);
 
@@ -36,14 +40,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     messages = body.messages;
     requestedModel = typeof body.model === "string" ? body.model : undefined;
-    if (!Array.isArray(messages)) throw new Error("messages inválido");
+    if (!Array.isArray(messages)) throw new Error();
 
-    // Validação de payload — protege a VPS de sobrecarga
-    if (messages.length > MAX_MESSAGES) {
-      return new Response(JSON.stringify({ error: "Histórico muito longo." }), {
-        status: 400, headers: { "Content-Type": "application/json" },
-      });
-    }
+    // Validação básica
     for (const m of messages) {
       if (!["user", "assistant"].includes(m.role)) {
         return new Response(JSON.stringify({ error: "Role de mensagem inválido." }), {
@@ -58,14 +57,20 @@ export async function POST(req: Request) {
     }
   } catch {
     return new Response(JSON.stringify({ error: "Corpo da requisição inválido." }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
+      status: 400, headers: { "Content-Type": "application/json" },
     });
   }
 
-  // Padrão: Mangaba local (http://localhost:11434/v1) com o modelo mangaba-pro.
+  // ── Truncar histórico para reduzir tempo de prefill ──────────────────
+  // Mantém sempre a primeira mensagem do usuário (contexto inicial) +
+  // as últimas MAX_HISTORY_MSGS mensagens. Conversas longas ficam muito
+  // mais rápidas porque o modelo processa menos tokens de entrada.
+  const trimmed: ChatMessage[] =
+    messages.length > MAX_HISTORY_MSGS
+      ? [messages[0], ...messages.slice(-MAX_HISTORY_MSGS + 1)]
+      : messages;
+
   const baseUrl = (process.env.OPENAI_BASE_URL || "http://localhost:11434/v1").replace(/\/$/, "");
-  // Usa o modelo solicitado pelo cliente ou cai no padrão configurado
   const model = requestedModel || process.env.OPENAI_MODEL || "mangaba-pro";
 
   let upstream: Response;
@@ -79,16 +84,21 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model,
         stream: true,
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmed],
+        // ── Opções de velocidade para o Ollama ───────────────────────────
+        // num_ctx: janela de contexto menor = prefill mais rápido.
+        //   2048 cobre a maioria das conversas; aumente para 4096 se
+        //   precisar de contexto maior (a custo de TTFT).
+        // num_predict: -1 = sem limite de tokens gerados (padrão).
+        options: {
+          num_ctx: 2048,
+          num_predict: -1,
+        },
       }),
     });
   } catch {
     return new Response(
-      JSON.stringify({
-        error:
-          "Não foi possível conectar ao serviço de IA. Verifique se o servidor (Ollama na VPS) está no ar " +
-          "e se OPENAI_BASE_URL/OPENAI_API_KEY estão corretos nas variáveis de ambiente.",
-      }),
+      JSON.stringify({ error: "Não foi possível conectar ao serviço de IA." }),
       { status: 502, headers: { "Content-Type": "application/json" } }
     );
   }
@@ -101,6 +111,9 @@ export async function POST(req: Request) {
     );
   }
 
+  // ── Stream de tokens para o browser ──────────────────────────────────
+  // Parseia SSE do Ollama e re-emite apenas o texto dos tokens,
+  // sem overhead de JSON por parte do browser.
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
 
@@ -116,20 +129,15 @@ export async function POST(req: Request) {
           const lines = buffer.split("\n");
           buffer = lines.pop() || "";
           for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed.startsWith("data:")) continue;
-            const data = trimmed.slice(5).trim();
-            if (data === "[DONE]") {
-              controller.close();
-              return;
-            }
+            const trimmedLine = line.trim();
+            if (!trimmedLine.startsWith("data:")) continue;
+            const data = trimmedLine.slice(5).trim();
+            if (data === "[DONE]") { controller.close(); return; }
             try {
               const json = JSON.parse(data);
               const token = json.choices?.[0]?.delta?.content;
               if (token) controller.enqueue(encoder.encode(token));
-            } catch {
-              // ignore partial/keepalive chunks
-            }
+            } catch { /* ignorar chunks parciais/keepalive */ }
           }
         }
       } catch (err) {
@@ -144,6 +152,7 @@ export async function POST(req: Request) {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no", // desabilita buffering em proxies
     },
   });
 }

@@ -20,13 +20,15 @@ interface Window {
 // In-memory store: key → { count, resetAt }
 const store = new Map<string, Window>();
 
-// Limpa entradas expiradas periodicamente para não crescer indefinidamente.
-setInterval(() => {
+// Cleanup lazy: remove entradas expiradas a cada N inserções (compatível com Edge).
+let _insertCount = 0;
+function maybePurge() {
+  if (++_insertCount % 200 !== 0) return;
   const now = Date.now();
   for (const [k, v] of store) {
     if (now > v.resetAt) store.delete(k);
   }
-}, 60_000);
+}
 
 /** Verifica e incrementa o contador para a chave dada.
  *  @param key    Identificador único (ex: "login:1.2.3.4")
@@ -40,6 +42,7 @@ async function checkInMemory(key: string, limit: number, windowSecs: number) {
   if (!w || now > w.resetAt) {
     w = { count: 0, resetAt: now + windowSecs * 1000 };
     store.set(key, w);
+    maybePurge();
   }
   w.count++;
   return {
