@@ -10,12 +10,42 @@
   --sidebar-bg: #f4f7fb;
   --hover: #e9eff7;
   --ativo: #e0eaf7;
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --azul-escuro: #90b8f0;
+  --azul: #6ba3e8;
+  --azul-vivo: #4da6ff;
+  --azul-claro: #1a2840;
+  --branco: #111827;
+  --texto: #e2e8f0;
+  --texto-suave: #94a3b8;
+  --borda: #1e2d3d;
+  --sidebar-bg: #0d1520;
+  --hover: #192433;
+  --ativo: #1e3350;
+  color-scheme: dark;
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* ===== IMPRESSÃO (exportar como PDF via print) ===== */
+@media print {
+  .sidebar, .topbar, .composer-outer, .composer-wrap,
+  .msg-actions, .msg-action, .scroll-down, .engine-banner,
+  .overlay, .menu-toggle, .conn { display: none !important; }
+  .layout { display: block !important; }
+  .main { display: block !important; overflow: visible !important; }
+  .scroll { overflow: visible !important; height: auto !important; }
+  .thread { max-width: 100% !important; padding: 0 !important; }
+  .row { page-break-inside: avoid; }
+  .row.user .bubble { background: #f0f4fb !important; color: #000 !important; }
+  body { font-size: 13px; }
 }
 
 html,
@@ -929,6 +959,106 @@ body {
   font-size: 0.74rem;
   color: var(--texto-suave);
   margin-top: 10px;
+}
+
+/* ===== THEME TOGGLE ===== */
+.theme-toggle {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--texto-suave);
+  padding: 7px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.theme-toggle:hover { background: var(--hover); color: var(--texto); }
+
+/* ===== EXPORT BUTTON ===== */
+.export-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--texto-suave);
+  padding: 7px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.export-btn:hover { background: var(--hover); color: var(--azul-vivo); }
+
+/* ===== FILE ATTACHMENT ===== */
+.attach-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--texto-suave);
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.attach-btn:hover { color: var(--azul-vivo); background: var(--hover); }
+
+.file-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--azul-claro);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  color: var(--texto);
+  margin-bottom: 8px;
+  max-width: 100%;
+}
+.file-chip span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-chip button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--texto-suave);
+  display: flex;
+  padding: 0;
+  flex-shrink: 0;
+}
+.file-chip button:hover { color: #c0392b; }
+
+.file-loading {
+  font-size: 0.78rem;
+  color: var(--texto-suave);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== KEYBOARD HINT ===== */
+.kbd-hint {
+  font-size: 0.72rem;
+  color: var(--texto-suave);
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 5px;
+}
+.kbd-hint kbd {
+  background: var(--hover);
+  border: 1px solid var(--borda);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  color: var(--texto);
 }
 
 /* overlay for mobile sidebar */

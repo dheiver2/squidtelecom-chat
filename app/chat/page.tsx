@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import hljs from "highlight.js/lib/common";
 import { ENGINE_NAME } from "../lib/mangaba";
 
@@ -329,6 +329,28 @@ export default function ChatPage() {
   const [renameText, setRenameText] = useState("");
   const [showScrollDown, setShowScrollDown] = useState(false);
 
+  // Tema escuro
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  // Arquivo anexado
+  const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null);
+  const [fileLoading, setFileLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Tema: carrega preferência salva e aplica no <html>
+  useEffect(() => {
+    const saved = localStorage.getItem("a1-theme") as "light" | "dark" | null;
+    const preferred = saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    setTheme(preferred);
+    document.documentElement.setAttribute("data-theme", preferred);
+  }, []);
+
+  function toggleTheme() {
+    const next = theme === "light" ? "dark" : "light";
+    setTheme(next);
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("a1-theme", next);
+  }
+
   // restaura sessão (cookie httpOnly) no carregamento
   useEffect(() => {
     fetch("/api/me", { cache: "no-store" })
@@ -610,21 +632,27 @@ export default function ChatPage() {
   }
 
   function send(text: string) {
-    const content = text.trim();
-    if (!content || loading) return;
+    const rawContent = text.trim();
+    if ((!rawContent && !attachedFile) || loading) return;
     if (status !== "online") {
-      setError(`O ${ENGINE_NAME} não está conectado. Verifique se ele está rodando no seu computador.`);
+      setError(`O ${ENGINE_NAME} não está conectado.`);
       return;
     }
+    // Injeta conteúdo do arquivo no início da mensagem
+    const content = attachedFile
+      ? `Arquivo: ${attachedFile.name}\n\`\`\`\n${attachedFile.content.slice(0, 24_000)}\n\`\`\`\n\n${rawContent || "Resuma o conteúdo acima."}`
+      : rawContent;
+
     const isFirst = messages.length === 0;
     const userMsg: Message = { role: "user", content };
     const history = [...messages, userMsg];
     updateCurrent((c) => ({
       ...c,
-      title: isFirst ? content.slice(0, 40) : c.title,
+      title: isFirst ? (rawContent || attachedFile?.name || "Arquivo").slice(0, 40) : c.title,
       messages: [...c.messages, userMsg],
     }));
     setInput("");
+    setAttachedFile(null);
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     runCompletion(history);
   }
@@ -681,6 +709,114 @@ export default function ChatPage() {
       e.preventDefault();
       send(input);
     }
+  }
+
+  // ---- Atalhos de teclado globais ----
+  const handleGlobalKey = useCallback((e: KeyboardEvent) => {
+    const tag = (document.activeElement as HTMLElement)?.tagName;
+    const inInput = tag === "INPUT" || tag === "TEXTAREA";
+
+    // Esc → parar geração
+    if (e.key === "Escape" && loading) {
+      stop();
+      return;
+    }
+    // ↑ → editar última mensagem do usuário (só quando input vazio e sem foco em campo)
+    if (e.key === "ArrowUp" && !inInput && !loading && messages.length > 0) {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === "user") {
+          startEdit(i, messages[i].content);
+          break;
+        }
+      }
+      return;
+    }
+    // Ctrl/Cmd+K → foca busca da sidebar
+    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
+      const search = document.querySelector<HTMLInputElement>(".history-search input");
+      if (search) { setSidebarOpen(true); setTimeout(() => search.focus(), 80); }
+    }
+  }, [loading, messages]);
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleGlobalKey);
+    return () => window.removeEventListener("keydown", handleGlobalKey);
+  }, [handleGlobalKey]);
+
+  // ---- Exportar conversa ----
+  function exportMarkdown() {
+    if (!current) return;
+    const lines = [`# ${current.title}\n`];
+    for (const m of current.messages) {
+      lines.push(m.role === "user" ? `**Você:** ${m.content}` : `**Alpha1 Assistant:** ${m.content}`);
+      lines.push("");
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `${current.title.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.md`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function exportPrint() {
+    window.print();
+  }
+
+  // ---- Anexar arquivo ----
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!e.target.files) return;
+    e.target.value = "";
+    if (!file) return;
+
+    setFileLoading(true);
+    try {
+      const content = await extractFileContent(file);
+      setAttachedFile({ name: file.name, content });
+    } catch {
+      setAttachedFile({ name: file.name, content: `[Não foi possível extrair o conteúdo de ${file.name}]` });
+    } finally {
+      setFileLoading(false);
+    }
+  }
+
+  async function extractFileContent(file: File): Promise<string> {
+    const textTypes = [
+      "text/", "application/json", "application/xml",
+      "application/javascript", "application/typescript",
+    ];
+    // Arquivos de texto
+    if (textTypes.some(t => file.type.startsWith(t)) || /\.(txt|md|csv|json|xml|js|ts|py|html|css|sql|yaml|yml|sh|log)$/i.test(file.name)) {
+      return new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result as string);
+        reader.onerror = rej;
+        reader.readAsText(file);
+      });
+    }
+    // PDF
+    if (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) {
+      return extractPdfText(file);
+    }
+    throw new Error("Tipo não suportado");
+  }
+
+  async function extractPdfText(file: File): Promise<string> {
+    const arrayBuffer = await file.arrayBuffer();
+    // Importação dinâmica para não bloquear o bundle inicial
+    const pdfjsLib = await import("pdfjs-dist");
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pages: string[] = [];
+    const maxPages = Math.min(pdf.numPages, 30); // limita 30 páginas
+    for (let i = 1; i <= maxPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      pages.push(content.items.map((item) => ("str" in item ? (item as { str: string }).str : "")).join(" "));
+    }
+    return pages.join("\n\n");
   }
 
   // ---------- LOGIN SCREEN ----------
@@ -771,11 +907,50 @@ export default function ChatPage() {
   const composer = (
     <div className="composer">
       {error && <div className="error">{error}</div>}
+      {fileLoading && (
+        <div className="file-loading">
+          <span className="typing"><span/><span/><span/></span>
+          Extraindo conteúdo do arquivo…
+        </div>
+      )}
+      {attachedFile && (
+        <div className="file-chip">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.8"/>
+            <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+          <span>{attachedFile.name}</span>
+          <button onClick={() => setAttachedFile(null)} aria-label="Remover arquivo">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+      )}
       <div className="input-box">
+        {/* Botão anexar arquivo */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".txt,.md,.csv,.json,.xml,.js,.ts,.py,.html,.css,.sql,.yaml,.yml,.sh,.log,.pdf"
+          style={{ display: "none" }}
+          onChange={handleFileSelect}
+        />
+        <button
+          className="attach-btn"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={loading}
+          aria-label="Anexar arquivo"
+          title="Anexar arquivo (PDF, texto, CSV…)"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
         <textarea
           ref={textareaRef}
           value={input}
-          placeholder="Envie uma mensagem para o Alpha1 Assistant"
+          placeholder={attachedFile ? "Adicione uma pergunta ou envie para resumir…" : "Envie uma mensagem para o Alpha1 Assistant"}
           rows={1}
           onChange={(e) => {
             setInput(e.target.value);
@@ -790,7 +965,7 @@ export default function ChatPage() {
             </svg>
           </button>
         ) : (
-          <button className="send" onClick={() => send(input)} disabled={!input.trim()} aria-label="Enviar">
+          <button className="send" onClick={() => send(input)} disabled={!input.trim() && !attachedFile} aria-label="Enviar">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M12 19V5M12 5l-6 6M12 5l6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -798,6 +973,11 @@ export default function ChatPage() {
         )}
       </div>
       <div className="disclaimer">Alpha1 Assistant pode cometer erros. Confira informações importantes.</div>
+      <div className="kbd-hint">
+        <span><kbd>↑</kbd> editar última mensagem</span>
+        <span><kbd>Esc</kbd> parar</span>
+        <span><kbd>⌘K</kbd> buscar</span>
+      </div>
     </div>
   );
 
@@ -932,6 +1112,39 @@ export default function ChatPage() {
             <span className="dot" />
             {status === "online" ? "Online" : status === "checking" ? "..." : "Offline"}
           </div>
+
+          {/* Exportar (só quando há mensagens) */}
+          {messages.length > 0 && (
+            <div style={{ display: "flex", gap: 2 }}>
+              <button className="export-btn" onClick={exportMarkdown} title="Exportar como Markdown">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                .md
+              </button>
+              <button className="export-btn" onClick={exportPrint} title="Exportar como PDF">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                  <rect x="6" y="14" width="12" height="8" rx="1" stroke="currentColor" strokeWidth="1.8"/>
+                </svg>
+                PDF
+              </button>
+            </div>
+          )}
+
+          {/* Toggle tema */}
+          <button className="theme-toggle" onClick={toggleTheme} aria-label="Alternar tema" title={theme === "dark" ? "Modo claro" : "Modo escuro"}>
+            {theme === "dark" ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.8"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
+          </button>
         </header>
 
         {status === "offline" && (
