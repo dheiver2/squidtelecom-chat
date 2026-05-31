@@ -4,9 +4,9 @@
 // pois o PgBouncer (pooler) do Supabase não suporta transações
 // e o Pool do pg conflita com ele na porta 6543.
 // ============================================================
-import { Client } from "pg";
+import { Client, QueryResultRow } from "pg";
 
-async function query<T = Record<string, unknown>>(sql: string, params: unknown[] = []) {
+async function query<T extends QueryResultRow = QueryResultRow>(sql: string, params: unknown[] = []) {
   const url = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
   if (!url) throw new Error("POSTGRES_URL não configurada.");
   const client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
