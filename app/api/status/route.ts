@@ -28,10 +28,15 @@ export async function GET(req: Request) {
     const data = await res.json();
     // OpenAI-compatible: { data: [{ id }] }
     const names: string[] = (data.data || []).map((m: { id: string }) => m.id);
-    // Prioriza o modelo configurado; senão escolhe o melhor disponível.
     const real = configured || pickModel(names);
     if (!real) throw new Error();
-    return Response.json({ online: true, model: brandModel(real) });
+    // Retorna também a lista completa de modelos disponíveis para o seletor
+    return Response.json({
+      online: true,
+      model: brandModel(real),
+      defaultModelId: real,
+      models: names.map((id) => ({ id, label: brandModel(id) })),
+    });
   } catch {
     return Response.json({ online: false, model: null });
   }

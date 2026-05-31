@@ -31,9 +31,11 @@ export async function POST(req: Request) {
   const apiKey = process.env.OPENAI_API_KEY || "mangaba";
 
   let messages: ChatMessage[];
+  let requestedModel: string | undefined;
   try {
     const body = await req.json();
     messages = body.messages;
+    requestedModel = typeof body.model === "string" ? body.model : undefined;
     if (!Array.isArray(messages)) throw new Error("messages inválido");
 
     // Validação de payload — protege a VPS de sobrecarga
@@ -63,7 +65,8 @@ export async function POST(req: Request) {
 
   // Padrão: Mangaba local (http://localhost:11434/v1) com o modelo mangaba-pro.
   const baseUrl = (process.env.OPENAI_BASE_URL || "http://localhost:11434/v1").replace(/\/$/, "");
-  const model = process.env.OPENAI_MODEL || "mangaba-pro";
+  // Usa o modelo solicitado pelo cliente ou cai no padrão configurado
+  const model = requestedModel || process.env.OPENAI_MODEL || "mangaba-pro";
 
   let upstream: Response;
   try {

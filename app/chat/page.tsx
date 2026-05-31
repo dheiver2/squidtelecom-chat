@@ -13,7 +13,10 @@ interface Conversation {
   id: string;
   title: string;
   messages: Message[];
+  model?: string; // modelo específico desta conversa
 }
+
+interface ModelOption { id: string; label: string; }
 
 const SUGGESTIONS = [
   "Quais serviços a Alpha 1 oferece?",
@@ -335,6 +338,11 @@ export default function ChatPage() {
   const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null);
   const [fileLoading, setFileLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Multi-modelo
+  const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
+  const [globalModel, setGlobalModel] = useState<string>("");
+  // Sync de conversas
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Tema: carrega preferência salva e aplica no <html>
   useEffect(() => {
@@ -360,27 +368,45 @@ export default function ChatPage() {
       .finally(() => setAuthChecking(false));
   }, []);
 
-  // carrega as conversas do usuário (isoladas por usuário, no dispositivo dele)
+  // Carrega conversas: servidor (fonte de verdade) com fallback para localStorage
   useEffect(() => {
     if (!user) {
       setConversations([]);
       setCurrentId("");
       return;
     }
-    try {
-      const raw = localStorage.getItem(storageKeyFor(user));
-      if (raw) {
-        const data: Conversation[] = JSON.parse(raw);
-        if (data.length) {
-          setConversations(data);
-          setCurrentId(data[0].id);
-          return;
+    async function loadConversations() {
+      try {
+        const res = await fetch("/api/conversations", { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          const serverConvs: Conversation[] = (data.conversations || []).map(
+            (c: { id: string; title: string; messages: Message[]; model?: string }) => ({
+              id: c.id, title: c.title, messages: c.messages || [], model: c.model,
+            })
+          );
+          if (serverConvs.length > 0) {
+            setConversations(serverConvs);
+            setCurrentId(serverConvs[0].id);
+            // Atualiza cache local
+            try { localStorage.setItem(storageKeyFor(user!), JSON.stringify(serverConvs)); } catch {}
+            return;
+          }
         }
-      }
-    } catch {}
-    const fresh = { id: uid(), title: "Nova conversa", messages: [] as Message[] };
-    setConversations([fresh]);
-    setCurrentId(fresh.id);
+      } catch { /* ignora erros de rede */ }
+      // Fallback: localStorage
+      try {
+        const raw = localStorage.getItem(storageKeyFor(user!));
+        if (raw) {
+          const data: Conversation[] = JSON.parse(raw);
+          if (data.length) { setConversations(data); setCurrentId(data[0].id); return; }
+        }
+      } catch {}
+      const fresh = { id: uid(), title: "Nova conversa", messages: [] as Message[] };
+      setConversations([fresh]);
+      setCurrentId(fresh.id);
+    }
+    loadConversations();
   }, [user]);
 
   // Verifica a conexão com o serviço de IA via rota server-side (/api/status),
@@ -394,13 +420,16 @@ export default function ChatPage() {
         const data = await res.json();
         if (data.online) {
           if (data.model) setModelLabel(data.model);
+          if (data.models?.length) {
+            setAvailableModels(data.models);
+            // Define o modelo global padrão só na primeira vez
+            setGlobalModel(prev => prev || data.defaultModelId || data.models[0]?.id || "");
+          }
           setStatus("online");
           return;
         }
       }
-    } catch {
-      // cai para offline abaixo
-    }
+    } catch { /* cai para offline abaixo */ }
     setStatus("offline");
   }
 
@@ -412,13 +441,35 @@ export default function ChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Salva no localStorage (cache) e sincroniza com o servidor (debounced)
   useEffect(() => {
     if (user && conversations.length) {
-      try {
-        localStorage.setItem(storageKeyFor(user), JSON.stringify(conversations));
-      } catch {}
+      try { localStorage.setItem(storageKeyFor(user), JSON.stringify(conversations)); } catch {}
     }
   }, [conversations, user]);
+
+  function syncConversationToServer(conv: Conversation) {
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = setTimeout(() => {
+      fetch(`/api/conversations/${conv.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: conv.title, messages: conv.messages, model: conv.model ?? null }),
+      }).catch(() => {});
+    }, 800);
+  }
+
+  function createConversationOnServer(conv: Conversation) {
+    fetch("/api/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: conv.id, title: conv.title, messages: conv.messages, model: conv.model ?? null }),
+    }).catch(() => {});
+  }
+
+  function deleteConversationOnServer(id: string) {
+    fetch(`/api/conversations/${id}`, { method: "DELETE" }).catch(() => {});
+  }
 
   const current = conversations.find((c) => c.id === currentId);
   const messages = current?.messages ?? [];
@@ -456,11 +507,12 @@ export default function ChatPage() {
 
   function newChat() {
     const existingEmpty = conversations.find((c) => c.messages.length === 0);
-    if (existingEmpty) setCurrentId(existingEmpty.id);
+    if (existingEmpty) { setCurrentId(existingEmpty.id); }
     else {
-      const fresh = { id: uid(), title: "Nova conversa", messages: [] as Message[] };
+      const fresh: Conversation = { id: uid(), title: "Nova conversa", messages: [], model: globalModel || undefined };
       setConversations((prev) => [fresh, ...prev]);
       setCurrentId(fresh.id);
+      createConversationOnServer(fresh);
     }
     setSidebarOpen(false);
     setError("");
@@ -468,11 +520,13 @@ export default function ChatPage() {
 
   function deleteChat(id: string, e: React.MouseEvent) {
     e.stopPropagation();
+    deleteConversationOnServer(id);
     setConversations((prev) => {
       const next = prev.filter((c) => c.id !== id);
       if (next.length === 0) {
-        const fresh = { id: uid(), title: "Nova conversa", messages: [] as Message[] };
+        const fresh: Conversation = { id: uid(), title: "Nova conversa", messages: [] };
         setCurrentId(fresh.id);
+        createConversationOnServer(fresh);
         return [fresh];
       }
       if (id === currentId) setCurrentId(next[0].id);
@@ -561,20 +615,20 @@ export default function ChatPage() {
 
   // Núcleo da geração: recebe o histórico (terminando numa msg do usuário),
   // anexa a resposta do assistente e faz o streaming. Usado por send/regenerar/editar.
-  async function runCompletion(history: Message[]) {
+  async function runCompletion(history: Message[], modelOverride?: string) {
     setError("");
     setLoading(true);
     autoScrollRef.current = true;
     const controller = new AbortController();
     abortRef.current = controller;
+    // Modelo da conversa atual (ou seletor global)
+    const modelId = modelOverride || current?.model || globalModel || undefined;
 
     try {
-      // Fala com a rota server-side, que faz proxy autenticado para o serviço de
-      // IA (Ollama na VPS). Não enviamos system prompt nem chave: a rota cuida disso.
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, model: modelId }),
         signal: controller.signal,
       });
 
@@ -628,6 +682,12 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
       abortRef.current = null;
+      // Sync da conversa ao servidor após stream completar
+      setConversations((prev) => {
+        const conv = prev.find((c) => c.id === currentId);
+        if (conv) syncConversationToServer(conv);
+        return prev;
+      });
     }
   }
 
@@ -700,8 +760,22 @@ export default function ChatPage() {
 
   function commitRename(id: string) {
     const t = renameText.trim();
-    setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, title: t || c.title } : c)));
+    setConversations((prev) => prev.map((c) => {
+      if (c.id !== id) return c;
+      const updated = { ...c, title: t || c.title };
+      syncConversationToServer(updated);
+      return updated;
+    }));
     setRenamingId(null);
+  }
+
+  function changeConversationModel(modelId: string) {
+    setConversations((prev) => prev.map((c) => {
+      if (c.id !== currentId) return c;
+      const updated = { ...c, model: modelId };
+      syncConversationToServer(updated);
+      return updated;
+    }));
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -1059,6 +1133,7 @@ export default function ChatPage() {
                     <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span className="title">{c.title || "Nova conversa"}</span>
+                  {c.model && <span className="conv-model-badge">{availableModels.find(m => m.id === c.model)?.label?.split(" ").pop() || c.model.split(":")[0]}</span>}
                   <span
                     className="rename"
                     onClick={(e) => {
@@ -1106,7 +1181,24 @@ export default function ChatPage() {
             </svg>
           </button>
           <div className="model">
-            Alpha1 Assistant <small>{status === "online" ? modelLabel : "offline"}</small>
+            Alpha1 Assistant
+            {availableModels.length > 1 ? (
+              <select
+                className="model-select"
+                value={current?.model || globalModel}
+                onChange={(e) => {
+                  setGlobalModel(e.target.value);
+                  changeConversationModel(e.target.value);
+                }}
+                title="Selecionar modelo"
+              >
+                {availableModels.map((m) => (
+                  <option key={m.id} value={m.id}>{m.label}</option>
+                ))}
+              </select>
+            ) : (
+              <small>{status === "online" ? modelLabel : "offline"}</small>
+            )}
           </div>
           <div className={`conn ${status}`} title={`Status do ${ENGINE_NAME}`}>
             <span className="dot" />

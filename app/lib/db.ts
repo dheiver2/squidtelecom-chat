@@ -91,3 +91,68 @@ export async function userExists(username: string): Promise<boolean> {
   );
   return res.rows.length > 0;
 }
+
+// ============================================================
+// Conversas — sync server-side
+// ============================================================
+
+export interface ConversationRow {
+  id: string;
+  title: string;
+  model: string | null;
+  messages: Array<{ role: string; content: string }>;
+  updated_at: string;
+}
+
+export async function migrateConversations() {
+  await query(`
+    CREATE TABLE IF NOT EXISTS conversations (
+      id          TEXT PRIMARY KEY,
+      username    TEXT NOT NULL,
+      title       TEXT NOT NULL DEFAULT 'Nova conversa',
+      model       TEXT,
+      messages    JSONB NOT NULL DEFAULT '[]',
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await query(
+    `CREATE INDEX IF NOT EXISTS conv_user_idx ON conversations(username, updated_at DESC)`
+  );
+}
+
+export async function listConversations(username: string): Promise<ConversationRow[]> {
+  const res = await query<ConversationRow>(
+    `SELECT id, title, model, messages, updated_at
+     FROM conversations WHERE username = $1
+     ORDER BY updated_at DESC LIMIT 200`,
+    [username]
+  );
+  return res.rows;
+}
+
+export async function upsertConversation(
+  id: string,
+  username: string,
+  title: string,
+  messages: unknown[],
+  model: string | null
+) {
+  await query(
+    `INSERT INTO conversations (id, username, title, messages, model, updated_at)
+     VALUES ($1, $2, $3, $4, $5, NOW())
+     ON CONFLICT (id) DO UPDATE SET
+       title      = EXCLUDED.title,
+       messages   = EXCLUDED.messages,
+       model      = EXCLUDED.model,
+       updated_at = NOW()`,
+    [id, username, title, JSON.stringify(messages), model]
+  );
+}
+
+export async function deleteConversationDb(id: string, username: string) {
+  await query(
+    "DELETE FROM conversations WHERE id = $1 AND username = $2",
+    [id, username]
+  );
+}
