@@ -2090,6 +2090,28 @@ body {
   cursor: not-allowed;
 }
 
+.login-switch {
+  font-size: 0.84rem;
+  color: var(--texto-suave);
+  text-align: center;
+  margin-top: 4px;
+}
+
+.login-switch button {
+  background: none;
+  border: none;
+  color: var(--azul-vivo);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: inherit;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.login-switch button:hover {
+  color: var(--azul-escuro);
+}
+
 .login-status {
   display: inline-flex;
   align-items: center;
