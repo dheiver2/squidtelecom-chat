@@ -34,6 +34,11 @@ const SUGGESTIONS = [
 const storageKeyFor = (user: string) => `alpha1-conversations:${user}`;
 
 function uid() {
+  // ID criptograficamente único — evita colisão entre usuários (que, com a
+  // proteção de IDOR no servidor, causaria no-op silencioso de sync).
+  try {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  } catch {}
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
@@ -99,7 +104,15 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
 // react-markdown + GFM (tabelas, listas de tarefas, ~strike~) + KaTeX (equações)
 // + CodeBlock custom (highlight.js + botão copiar). Memoizado para não reparsear
 // todas as mensagens a cada token durante o streaming.
+/** Fecha cercas de código (```) ainda abertas durante o streaming, para o bloco
+ *  não "piscar" entre inline e bloco enquanto o fechamento não chegou. */
+function balanceCodeFences(text: string): string {
+  const fences = (text.match(/```/g) || []).length;
+  return fences % 2 === 1 ? text + "\n```" : text;
+}
+
 const MessageContent = memo(function MessageContent({ content }: { content: string }) {
+  const safe = balanceCodeFences(content);
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm, remarkMath]}
@@ -135,7 +148,7 @@ const MessageContent = memo(function MessageContent({ content }: { content: stri
         ),
       }}
     >
-      {content}
+      {safe}
     </ReactMarkdown>
   );
 });
@@ -175,6 +188,8 @@ export default function ChatPage() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameText, setRenameText] = useState("");
   const [showScrollDown, setShowScrollDown] = useState(false);
+  // Aviso de falha de sincronização com o servidor (some sozinho).
+  const [syncWarning, setSyncWarning] = useState(false);
 
   // Tema escuro
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -186,8 +201,11 @@ export default function ChatPage() {
   // Multi-modelo
   const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
   const [globalModel, setGlobalModel] = useState<string>("");
-  // Sync de conversas
-  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Sync de conversas — um timer de debounce POR conversa (evita que edições
+  // rápidas em conversas diferentes cancelem o sync umas das outras).
+  const syncTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
+  // Id da conversa que está gerando no momento (escrita direcionada + abort ao trocar).
+  const generatingIdRef = useRef<string | null>(null);
 
   // Tema: carrega preferência salva e aplica no <html>
   useEffect(() => {
@@ -198,6 +216,13 @@ export default function ChatPage() {
     // Estado de colapso da sidebar (desktop)
     setSidebarCollapsed(localStorage.getItem("a1-sidebar-collapsed") === "1");
   }, []);
+
+  // Some o aviso de sync automaticamente após alguns segundos.
+  useEffect(() => {
+    if (!syncWarning) return;
+    const t = setTimeout(() => setSyncWarning(false), 6000);
+    return () => clearTimeout(t);
+  }, [syncWarning]);
 
   function toggleTheme() {
     const next = theme === "light" ? "dark" : "light";
@@ -290,9 +315,23 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!user) return;
-    checkEngine();
-    const t = setInterval(checkEngine, 8000);
-    return () => clearInterval(t);
+    let t: ReturnType<typeof setInterval> | null = null;
+    const start = () => {
+      if (t) return;
+      checkEngine();
+      t = setInterval(checkEngine, 8000);
+    };
+    const stop = () => {
+      if (t) { clearInterval(t); t = null; }
+    };
+    // Pausa o polling quando a aba está oculta (economiza requests ao provedor).
+    const onVisibility = () => (document.hidden ? stop() : start());
+    if (!document.hidden) start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -303,23 +342,43 @@ export default function ChatPage() {
     }
   }, [conversations, user]);
 
+  // POST/PATCH com 1 retry (backoff curto): reduz perda silenciosa de dados em
+  // falhas transitórias de rede. Persiste o aviso só se o retry também falhar.
+  async function persistConversation(url: string, method: "POST" | "PATCH", body: unknown) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (res.ok) return true;
+      } catch { /* tenta de novo */ }
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 600));
+    }
+    setSyncWarning(true);
+    return false;
+  }
+
   function syncConversationToServer(conv: Conversation) {
-    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
-    syncTimerRef.current = setTimeout(() => {
-      fetch(`/api/conversations/${conv.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: conv.title, messages: conv.messages, model: conv.model ?? null }),
-      }).catch(() => {});
-    }, 800);
+    const timers = syncTimersRef.current;
+    const existing = timers.get(conv.id);
+    if (existing) clearTimeout(existing);
+    timers.set(
+      conv.id,
+      setTimeout(() => {
+        timers.delete(conv.id);
+        persistConversation(`/api/conversations/${conv.id}`, "PATCH", {
+          title: conv.title, messages: conv.messages, model: conv.model ?? null,
+        });
+      }, 800)
+    );
   }
 
   function createConversationOnServer(conv: Conversation) {
-    fetch("/api/conversations", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: conv.id, title: conv.title, messages: conv.messages, model: conv.model ?? null }),
-    }).catch(() => {});
+    persistConversation("/api/conversations", "POST", {
+      id: conv.id, title: conv.title, messages: conv.messages, model: conv.model ?? null,
+    });
   }
 
   function deleteConversationOnServer(id: string) {
@@ -328,6 +387,14 @@ export default function ChatPage() {
 
   const current = conversations.find((c) => c.id === currentId);
   const messages = current?.messages ?? [];
+
+  // Ao trocar de conversa enquanto uma geração está em curso, aborta o stream:
+  // evita UI "travada em carregando" na conversa nova e streams órfãs em background.
+  useEffect(() => {
+    if (generatingIdRef.current && generatingIdRef.current !== currentId) {
+      abortRef.current?.abort();
+    }
+  }, [currentId]);
 
   useEffect(() => {
     if (autoScrollRef.current) {
@@ -358,6 +425,13 @@ export default function ChatPage() {
 
   function updateCurrent(updater: (c: Conversation) => Conversation) {
     setConversations((prev) => prev.map((c) => (c.id === currentId ? updater(c) : c)));
+  }
+
+  // Atualiza uma conversa por id explícito — usado durante o streaming para que
+  // os tokens sempre caiam na conversa CORRETA, mesmo que o usuário troque de
+  // conversa no meio da geração.
+  function updateConv(id: string, updater: (c: Conversation) => Conversation) {
+    setConversations((prev) => prev.map((c) => (c.id === id ? updater(c) : c)));
   }
 
   function newChat() {
@@ -421,6 +495,12 @@ export default function ChatPage() {
     try {
       await fetch("/api/logout", { method: "POST" });
     } catch {}
+    // Aborta geração pendente e limpa o cache local de conversas — em dispositivo
+    // compartilhado, o próximo usuário não deve conseguir ler o histórico deste.
+    abortRef.current?.abort();
+    if (user) { try { localStorage.removeItem(storageKeyFor(user)); } catch {} }
+    setConversations([]);
+    setCurrentId("");
     setUser(null);
     setUsernameInput("");
     setPasswordInput("");
@@ -476,6 +556,10 @@ export default function ChatPage() {
     autoScrollRef.current = true;
     const controller = new AbortController();
     abortRef.current = controller;
+    // Conversa-alvo fixada no início: todos os tokens caem aqui, mesmo que o
+    // usuário troque de conversa durante o streaming.
+    const targetId = currentId;
+    generatingIdRef.current = targetId;
     // Modelo da conversa atual (ou seletor global)
     const modelId = modelOverride || current?.model || globalModel || undefined;
 
@@ -515,30 +599,52 @@ export default function ChatPage() {
         throw new Error(msg);
       }
 
-      updateCurrent((c) => ({
+      updateConv(targetId, (c) => ({
         ...c,
         messages: [...c.messages, { role: "assistant", content: "" }],
       }));
 
-      const appendToken = (token: string) =>
-        updateCurrent((c) => {
+      // Buffer de tokens com flush via requestAnimationFrame: em vez de um
+      // setState (e re-parse de markdown) por token, acumulamos e aplicamos no
+      // máximo ~1x por frame. Reduz lag/flicker em respostas longas com código.
+      let pending = "";
+      let rafId: number | null = null;
+      const flush = () => {
+        rafId = null;
+        if (!pending) return;
+        const add = pending;
+        pending = "";
+        updateConv(targetId, (c) => {
           const msgs = [...c.messages];
-          msgs[msgs.length - 1] = {
-            role: "assistant",
-            content: msgs[msgs.length - 1].content + token,
-          };
+          const last = msgs[msgs.length - 1];
+          if (!last || last.role !== "assistant") return c;
+          msgs[msgs.length - 1] = { role: "assistant", content: last.content + add };
           return { ...c, messages: msgs };
         });
+      };
+      const scheduleFlush = () => {
+        if (rafId != null) return;
+        rafId =
+          typeof requestAnimationFrame !== "undefined"
+            ? requestAnimationFrame(flush)
+            : (setTimeout(flush, 16) as unknown as number);
+      };
 
       // A rota /api/chat devolve os tokens em TEXTO PURO (já parseou o SSE do
       // upstream), então é só decodificar e anexar cada pedaço.
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        if (chunk) appendToken(chunk);
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          if (chunk) { pending += chunk; scheduleFlush(); }
+        }
+      } finally {
+        // Garante que o último pedaço seja aplicado.
+        if (rafId != null && typeof cancelAnimationFrame !== "undefined") cancelAnimationFrame(rafId);
+        flush();
       }
     } catch (err) {
       const aborted = err instanceof DOMException && err.name === "AbortError";
@@ -546,7 +652,7 @@ export default function ChatPage() {
         setError(err instanceof Error ? err.message : "Erro inesperado.");
       }
       // remove a resposta do assistente se ela ficou vazia (erro ou parada imediata)
-      updateCurrent((c) => {
+      updateConv(targetId, (c) => {
         const msgs = [...c.messages];
         if (msgs.length && msgs[msgs.length - 1].role === "assistant" && msgs[msgs.length - 1].content === "") {
           msgs.pop();
@@ -556,9 +662,10 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
       abortRef.current = null;
-      // Sync da conversa ao servidor após stream completar
+      generatingIdRef.current = null;
+      // Sync da conversa-alvo (não a "atual", que pode ter mudado durante o stream)
       setConversations((prev) => {
-        const conv = prev.find((c) => c.id === currentId);
+        const conv = prev.find((c) => c.id === targetId);
         if (conv) syncConversationToServer(conv);
         return prev;
       });
@@ -755,7 +862,10 @@ export default function ChatPage() {
     const arrayBuffer = await file.arrayBuffer();
     // Importação dinâmica para não bloquear o bundle inicial
     const pdfjsLib = await import("pdfjs-dist");
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    // Worker servido localmente a partir de /public (same-origin) — sem CDN
+    // externa, funciona offline e sob CSP estrita. O arquivo é copiado de
+    // node_modules/pdfjs-dist/build/pdf.worker.min.mjs (ver scripts/sync-pdf-worker).
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     const pages: string[] = [];
     const maxPages = Math.min(pdf.numPages, 30); // limita 30 páginas
@@ -1158,6 +1268,13 @@ export default function ChatPage() {
             )}
           </button>
         </header>
+
+        {syncWarning && (
+          <div className="engine-banner" role="status">
+            <strong>Não foi possível salvar no servidor.</strong> Sua conversa está
+            guardada neste dispositivo e tentaremos sincronizar novamente.
+          </div>
+        )}
 
         {status === "offline" && (
           <div className="engine-banner">
