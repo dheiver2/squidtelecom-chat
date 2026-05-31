@@ -1,37 +1,45 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { hashPassword, createSessionToken, sessionCookie } from "../../lib/auth";
-import { findUser, migrateDb } from "../../lib/db";
+import { verifyPassword, hashPasswordBcrypt, createSessionToken, sessionCookie } from "../../lib/auth";
+import { findUser, updatePasswordHash } from "../../lib/db";
+import { rateLimit, LIMITS, getIp, tooManyRequests } from "../../lib/ratelimit";
 
 export async function POST(req: Request) {
+  // Rate limiting: 5 tentativas / 15 min por IP
+  const ip = getIp(req);
+  const rl = await rateLimit(`login:${ip}`, LIMITS.login.limit, LIMITS.login.windowSecs);
+  if (!rl.allowed) return tooManyRequests(rl.resetAt);
+
   let username = "";
   let password = "";
   try {
     const body = await req.json();
     username = String(body.username || "").trim().toLowerCase();
     password = String(body.password || "");
-  } catch { /* corpo inválido tratado abaixo */ }
+  } catch { /* tratado abaixo */ }
 
   if (!username || !password) {
     return Response.json({ error: "Usuário ou senha inválidos." }, { status: 401 });
   }
 
   try {
-    await migrateDb();
     const user = await findUser(username);
     if (!user) {
       return Response.json({ error: "Usuário ou senha inválidos." }, { status: 401 });
     }
-    const hash = hashPassword(username, password);
-    // timing-safe compare
-    const a = Buffer.from(user.password_hash);
-    const b = Buffer.from(hash);
-    const valid = a.length === b.length &&
-      require("crypto").timingSafeEqual(a, b);
+
+    const { valid, needsRehash } = await verifyPassword(username, password, user.password_hash);
     if (!valid) {
       return Response.json({ error: "Usuário ou senha inválidos." }, { status: 401 });
     }
+
+    // Migração transparente: re-hash HMAC legado → bcrypt
+    if (needsRehash) {
+      const newHash = await hashPasswordBcrypt(password);
+      await updatePasswordHash(username, newHash).catch(() => {}); // não bloqueia o login
+    }
+
     const token = createSessionToken(username);
     return new Response(JSON.stringify({ user: username }), {
       status: 200,

@@ -1,12 +1,18 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { hashPassword } from "../../lib/auth";
-import { createUser, migrateDb, userExists } from "../../lib/db";
+import { hashPasswordBcrypt } from "../../lib/auth";
+import { createUser, userExists } from "../../lib/db";
+import { rateLimit, LIMITS, getIp, tooManyRequests } from "../../lib/ratelimit";
 
 const USERNAME_RE = /^[a-z0-9_.-]{3,30}$/;
 
 export async function POST(req: Request) {
+  // Rate limiting: 3 cadastros / hora por IP
+  const ip = getIp(req);
+  const rl = await rateLimit(`register:${ip}`, LIMITS.register.limit, LIMITS.register.windowSecs);
+  if (!rl.allowed) return tooManyRequests(rl.resetAt);
+
   let username: string, password: string;
   try {
     const body = await req.json();
@@ -27,11 +33,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    await migrateDb(); // garante que a tabela existe (idempotente)
     if (await userExists(username)) {
       return Response.json({ error: "Nome de usuário já está em uso." }, { status: 409 });
     }
-    await createUser(username, hashPassword(username, password));
+    const hash = await hashPasswordBcrypt(password);
+    await createUser(username, hash);
     return Response.json({ ok: true }, { status: 201 });
   } catch (e) {
     console.error("register error", e);

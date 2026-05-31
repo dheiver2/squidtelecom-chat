@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { readSession } from "../../lib/auth";
+import { rateLimit, LIMITS, tooManyRequests } from "../../lib/ratelimit";
 
 const SYSTEM_PROMPT =
   "Você é o Alpha1 Assistant, o assistente virtual inteligente da Alpha 1 Consultoria — " +
@@ -9,19 +10,24 @@ const SYSTEM_PROMPT =
   "Responda sempre em português do Brasil, de forma clara, profissional e prestativa. " +
   "Use markdown quando ajudar na leitura.";
 
+const MAX_MESSAGES = 100;
+const MAX_MSG_LENGTH = 32_000; // chars (~8k tokens)
+
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
 export async function POST(req: Request) {
-  // Só usuários autenticados (os 20 funcionários) podem usar a IA.
-  if (!readSession(req.headers.get("cookie"))) {
+  const username = readSession(req.headers.get("cookie"));
+  if (!username) {
     return new Response(JSON.stringify({ error: "Sessão expirada. Entre novamente." }), {
       status: 401,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  // O motor (Mangaba via túnel) não exige chave. Para provedores que exigem
-  // (OpenAI, Groq, etc.) defina OPENAI_API_KEY; caso contrário usamos um placeholder.
+  // Rate limiting: 30 msgs / min por usuário autenticado
+  const rl = await rateLimit(`chat:${username}`, LIMITS.chat.limit, LIMITS.chat.windowSecs);
+  if (!rl.allowed) return tooManyRequests(rl.resetAt);
+
   const apiKey = process.env.OPENAI_API_KEY || "mangaba";
 
   let messages: ChatMessage[];
@@ -29,6 +35,25 @@ export async function POST(req: Request) {
     const body = await req.json();
     messages = body.messages;
     if (!Array.isArray(messages)) throw new Error("messages inválido");
+
+    // Validação de payload — protege a VPS de sobrecarga
+    if (messages.length > MAX_MESSAGES) {
+      return new Response(JSON.stringify({ error: "Histórico muito longo." }), {
+        status: 400, headers: { "Content-Type": "application/json" },
+      });
+    }
+    for (const m of messages) {
+      if (!["user", "assistant"].includes(m.role)) {
+        return new Response(JSON.stringify({ error: "Role de mensagem inválido." }), {
+          status: 400, headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (typeof m.content !== "string" || m.content.length > MAX_MSG_LENGTH) {
+        return new Response(JSON.stringify({ error: "Mensagem muito longa." }), {
+          status: 400, headers: { "Content-Type": "application/json" },
+        });
+      }
+    }
   } catch {
     return new Response(JSON.stringify({ error: "Corpo da requisição inválido." }), {
       status: 400,

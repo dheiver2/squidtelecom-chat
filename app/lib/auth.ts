@@ -1,45 +1,57 @@
+// ============================================================
+// Autenticação: sessão cookie httpOnly + bcrypt para senhas
+// Migração transparente: logins com hash HMAC antigo são
+// re-hasheados com bcrypt automaticamente no próximo login.
+// ============================================================
 import crypto from "crypto";
-
-// ============================================================
-// Autenticação simples para uso corporativo (sem banco):
-//  - Os 20 funcionários ficam em APP_USERS (env), como
-//    { "usuario": "<hash da senha>" }.
-//  - A sessão é um cookie httpOnly assinado com SESSION_SECRET.
-//  - As conversas NÃO passam por aqui: ficam no dispositivo de
-//    cada usuário. Esta camada só controla quem entra.
-// ============================================================
+import bcrypt from "bcryptjs";
 
 const SECRET = process.env.SESSION_SECRET || "";
 const COOKIE = "a1_session";
 const MAX_AGE = 60 * 60 * 12; // 12 horas
+const BCRYPT_ROUNDS = 12;
 
+// ---- HMAC interno (somente para migração e sessão) ----
 function hmac(data: string): string {
   return crypto.createHmac("sha256", SECRET).update(data).digest("base64url");
 }
 
-/** Gera o hash de uma senha (usado para montar APP_USERS). */
+// ---- Senhas (bcrypt) ----
+
+/** Cria hash bcrypt de uma senha (novo padrão). */
+export async function hashPasswordBcrypt(password: string): Promise<string> {
+  return bcrypt.hash(password, BCRYPT_ROUNDS);
+}
+
+/** Verifica senha contra o hash armazenado.
+ *  Suporta bcrypt ($2b$…) e HMAC legado (migração transparente).
+ *  Retorna { valid, needsRehash } — se needsRehash=true o chamador deve
+ *  salvar um novo hash bcrypt no banco. */
+export async function verifyPassword(
+  username: string,
+  password: string,
+  storedHash: string
+): Promise<{ valid: boolean; needsRehash: boolean }> {
+  if (storedHash.startsWith("$2b$") || storedHash.startsWith("$2a$")) {
+    // Hash moderno — bcrypt
+    const valid = await bcrypt.compare(password, storedHash);
+    return { valid, needsRehash: false };
+  }
+  // Hash legado — HMAC (migra para bcrypt no próximo login)
+  const legacyHash = hmac(`pw:${username}:${password}`);
+  const a = Buffer.from(storedHash);
+  const b = Buffer.from(legacyHash);
+  const valid =
+    a.length === b.length && crypto.timingSafeEqual(a, b);
+  return { valid, needsRehash: valid }; // se válido, pede rehash
+}
+
+/** @deprecated Somente para migração. Não usar em novos cadastros. */
 export function hashPassword(username: string, password: string): string {
   return hmac(`pw:${username}:${password}`);
 }
 
-function getUsers(): Record<string, string> {
-  try {
-    const parsed = JSON.parse(process.env.APP_USERS || "{}");
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
-}
-
-export function verifyCredentials(username: string, password: string): boolean {
-  if (!SECRET) return false;
-  const stored = getUsers()[username];
-  if (!stored) return false;
-  const computed = hashPassword(username, password);
-  const a = Buffer.from(stored);
-  const b = Buffer.from(computed);
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
-}
+// ---- Sessão ----
 
 export function createSessionToken(username: string): string {
   const exp = Date.now() + MAX_AGE * 1000;
@@ -47,7 +59,6 @@ export function createSessionToken(username: string): string {
   return `${payload}.${hmac(payload)}`;
 }
 
-/** Lê e valida a sessão a partir do header Cookie. Retorna o usuário ou null. */
 export function readSession(cookieHeader: string | null): string | null {
   if (!cookieHeader || !SECRET) return null;
   const entry = cookieHeader.split(/; */).find((c) => c.startsWith(COOKIE + "="));

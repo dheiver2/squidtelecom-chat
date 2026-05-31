@@ -45,8 +45,11 @@ function parseInline(text: string, kp: string): React.ReactNode[] {
       nodes.push(<strong key={`${kp}-${k++}`}>{t.slice(2, -2)}</strong>);
     } else if (t.startsWith("[")) {
       const mm = /\[([^\]]+)\]\(([^)\s]+)\)/.exec(t)!;
+      const href = mm[2];
+      // Bloqueia javascript: e outros esquemas não-HTTP para evitar XSS
+      if (!href.startsWith("http://") && !href.startsWith("https://")) break;
       nodes.push(
-        <a key={`${kp}-${k++}`} href={mm[2]} target="_blank" rel="noreferrer">
+        <a key={`${kp}-${k++}`} href={href} target="_blank" rel="noreferrer noopener">
           {mm[1]}
         </a>
       );
