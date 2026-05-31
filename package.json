@@ -13,6 +13,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/pg": "^8.20.0",
     "bcryptjs": "^3.0.3",
+    "duck-duck-scrape": "^2.2.7",
     "highlight.js": "^11.11.1",
     "next": "14.2.5",
     "pdfjs-dist": "^5.4.624",

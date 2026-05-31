@@ -5,7 +5,8 @@ export const dynamic = "force-dynamic";
 
 import { readSessionEdge } from "../../lib/auth-edge";
 import { rateLimit, LIMITS, tooManyRequests } from "../../lib/ratelimit";
-import { searchWeb, formatSearchContext } from "../../lib/search";
+import { formatSearchContext } from "../../lib/search";
+import type { SearchResult } from "../../lib/search";
 
 const SYSTEM_PROMPT =
   "Você é o Alpha1 Assistant, o assistente virtual inteligente da Alpha 1 Consultoria — " +
@@ -37,12 +38,15 @@ export async function POST(req: Request) {
 
   let messages: ChatMessage[];
   let requestedModel: string | undefined;
-  let webSearch = false;
+  let searchResults: SearchResult[] = [];
+  let searchQuery = "";
   try {
     const body = await req.json();
     messages = body.messages;
     requestedModel = typeof body.model === "string" ? body.model : undefined;
-    webSearch = body.webSearch === true;
+    // Resultados de busca pré-computados pelo frontend via /api/search
+    if (Array.isArray(body.searchResults)) searchResults = body.searchResults;
+    if (typeof body.searchQuery === "string") searchQuery = body.searchQuery;
     if (!Array.isArray(messages)) throw new Error();
 
     // Validação básica
@@ -70,17 +74,10 @@ export async function POST(req: Request) {
       ? [messages[0], ...messages.slice(-MAX_HISTORY_MSGS + 1)]
       : messages;
 
-  // ── Busca na web (injetada como contexto antes do último user msg) ──
-  let searchContext = "";
-  if (webSearch && process.env.BRAVE_SEARCH_API_KEY) {
-    const lastUserMsg = [...trimmed].reverse().find((m) => m.role === "user");
-    if (lastUserMsg) {
-      // Extrai até 120 chars da última mensagem como query de busca
-      const query = lastUserMsg.content.replace(/```[\s\S]*?```/g, "").trim().slice(0, 120);
-      const results = await searchWeb(query, 5);
-      searchContext = formatSearchContext(query, results);
-    }
-  }
+  // ── Contexto de busca (pré-computado pelo /api/search) ─────────────
+  const searchContext = searchResults.length
+    ? formatSearchContext(searchQuery, searchResults)
+    : "";
 
   const baseUrl = (process.env.OPENAI_BASE_URL || "http://localhost:11434/v1").replace(/\/$/, "");
   const model = requestedModel || process.env.OPENAI_MODEL || "mangaba-pro";

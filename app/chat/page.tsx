@@ -626,10 +626,29 @@ export default function ChatPage() {
     const modelId = modelOverride || current?.model || globalModel || undefined;
 
     try {
+      // Se busca na web ativa: chama /api/search com a última mensagem do usuário
+      let searchResults: Array<{ title: string; url: string; description: string }> = [];
+      let searchQuery = "";
+      if (webSearch) {
+        const lastUser = [...history].reverse().find((m) => m.role === "user");
+        if (lastUser) {
+          searchQuery = lastUser.content.replace(/```[\s\S]*?```/g, "").trim().slice(0, 120);
+          try {
+            const sr = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`, {
+              signal: controller.signal,
+            });
+            if (sr.ok) {
+              const sd = await sr.json();
+              searchResults = sd.results || [];
+            }
+          } catch { /* falha silenciosa — chat continua sem busca */ }
+        }
+      }
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, model: modelId, webSearch }),
+        body: JSON.stringify({ messages: history, model: modelId, searchResults, searchQuery }),
         signal: controller.signal,
       });
 
