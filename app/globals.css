@@ -603,6 +603,25 @@ body {
   border-radius: 10px;
   -webkit-overflow-scrolling: touch;
 }
+
+/* GFM: listas de tarefas */
+.content li input[type="checkbox"] {
+  margin-right: 8px;
+  accent-color: var(--azul-vivo);
+}
+.content li.task-list-item {
+  list-style: none;
+  margin-left: -1.2em;
+}
+
+/* KaTeX: equações com scroll horizontal em telas pequenas */
+.content .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+  margin: 12px 0;
+}
+.content .katex { font-size: 1.05em; }
 .content table {
   border-collapse: collapse;
   width: 100%;

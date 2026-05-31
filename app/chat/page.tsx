@@ -2,6 +2,11 @@
 
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import hljs from "highlight.js/lib/common";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import { ENGINE_NAME } from "../lib/mangaba";
 
 type Role = "user" | "assistant";
@@ -30,39 +35,6 @@ const storageKeyFor = (user: string) => `alpha1-conversations:${user}`;
 
 function uid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
-function parseInline(text: string, kp: string): React.ReactNode[] {
-  const nodes: React.ReactNode[] = [];
-  const regex =
-    /(\*\*[^*]+\*\*|__[^_]+__|\*(?!\s)[^*\n]+\*|`[^`]+`|\[[^\]]+\]\([^)\s]+\))/g;
-  let last = 0;
-  let m: RegExpExecArray | null;
-  let k = 0;
-  while ((m = regex.exec(text)) !== null) {
-    if (m.index > last) nodes.push(text.slice(last, m.index));
-    const t = m[0];
-    if (t.startsWith("`")) {
-      nodes.push(<code key={`${kp}-${k++}`}>{t.slice(1, -1)}</code>);
-    } else if (t.startsWith("**") || t.startsWith("__")) {
-      nodes.push(<strong key={`${kp}-${k++}`}>{t.slice(2, -2)}</strong>);
-    } else if (t.startsWith("[")) {
-      const mm = /\[([^\]]+)\]\(([^)\s]+)\)/.exec(t)!;
-      const href = mm[2];
-      // Bloqueia javascript: e outros esquemas não-HTTP para evitar XSS
-      if (!href.startsWith("http://") && !href.startsWith("https://")) break;
-      nodes.push(
-        <a key={`${kp}-${k++}`} href={href} target="_blank" rel="noreferrer noopener">
-          {mm[1]}
-        </a>
-      );
-    } else {
-      nodes.push(<em key={`${kp}-${k++}`}>{t.slice(1, -1)}</em>);
-    }
-    last = regex.lastIndex;
-  }
-  if (last < text.length) nodes.push(text.slice(last));
-  return nodes;
 }
 
 function CodeBlock({ code, lang }: { code: string; lang: string }) {
@@ -123,192 +95,49 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
   );
 }
 
-const splitRow = (s: string) =>
-  s
-    .trim()
-    .replace(/^\|/, "")
-    .replace(/\|$/, "")
-    .split("|")
-    .map((c) => c.trim());
-
-function renderMarkdown(src: string): React.ReactNode[] {
-  const lines = src.replace(/\r\n/g, "\n").split("\n");
-  const blocks: React.ReactNode[] = [];
-  let i = 0;
-  let key = 0;
-
-  const isHeading = (l: string) => /^#{1,6}\s+/.test(l);
-  const isUl = (l: string) => /^\s*[-*+]\s+/.test(l);
-  const isOl = (l: string) => /^\s*\d+[.)]\s+/.test(l);
-  const isQuote = (l: string) => /^>\s?/.test(l);
-  const isHr = (l: string) => /^(-{3,}|\*{3,}|_{3,})$/.test(l.trim());
-  const isFence = (l: string) => /^```/.test(l.trim());
-
-  while (i < lines.length) {
-    const line = lines[i];
-
-    if (isFence(line)) {
-      const lang = (/^```([\w+-]*)/.exec(line.trim())?.[1] || "").toLowerCase();
-      const buf: string[] = [];
-      i++;
-      while (i < lines.length && !/^```\s*$/.test(lines[i].trim())) {
-        buf.push(lines[i]);
-        i++;
-      }
-      i++; // pula o fechamento (se houver)
-      blocks.push(<CodeBlock key={key++} code={buf.join("\n")} lang={lang} />);
-      continue;
-    }
-
-    if (line.trim() === "") {
-      i++;
-      continue;
-    }
-
-    const h = /^(#{1,6})\s+(.*)$/.exec(line);
-    if (h) {
-      const level = Math.min(h[1].length + 1, 6);
-      const Tag = `h${level}` as keyof JSX.IntrinsicElements;
-      blocks.push(<Tag key={key}>{parseInline(h[2], `h${key++}`)}</Tag>);
-      i++;
-      continue;
-    }
-
-    if (isHr(line)) {
-      blocks.push(<hr key={key++} />);
-      i++;
-      continue;
-    }
-
-    // tabela (GFM)
-    if (
-      line.includes("|") &&
-      i + 1 < lines.length &&
-      /^\s*\|?[\s:|-]*-[\s:|-]*\|?\s*$/.test(lines[i + 1]) &&
-      lines[i + 1].includes("-")
-    ) {
-      const header = splitRow(line);
-      // Alinhamento por coluna a partir da linha separadora (:--, :--:, --:)
-      const aligns: Array<"left" | "center" | "right"> = splitRow(lines[i + 1]).map((c) => {
-        const left = c.startsWith(":");
-        const right = c.endsWith(":");
-        if (left && right) return "center";
-        if (right) return "right";
-        if (left) return "left";
-        return "left";
-      });
-      i += 2;
-      const rows: string[][] = [];
-      while (i < lines.length && lines[i].includes("|") && lines[i].trim() !== "") {
-        rows.push(splitRow(lines[i]));
-        i++;
-      }
-      const tk = key++;
-      const colAlign = (ci: number) => aligns[ci] || "left";
-      blocks.push(
-        <div className="table-wrap" key={tk}>
-          <table>
-            <thead>
-              <tr>
-                {header.map((c, ci) => (
-                  <th key={ci} style={{ textAlign: colAlign(ci) }}>
-                    {parseInline(c, `th${tk}-${ci}`)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, ri) => (
-                <tr key={ri}>
-                  {header.map((_, ci) => (
-                    <td key={ci} style={{ textAlign: colAlign(ci) }}>
-                      {parseInline(r[ci] ?? "", `td${tk}-${ri}-${ci}`)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-      continue;
-    }
-
-    if (isQuote(line)) {
-      const buf: string[] = [];
-      while (i < lines.length && isQuote(lines[i])) {
-        buf.push(lines[i].replace(/^>\s?/, ""));
-        i++;
-      }
-      blocks.push(<blockquote key={key++}>{renderMarkdown(buf.join("\n"))}</blockquote>);
-      continue;
-    }
-
-    if (isUl(line)) {
-      const items: React.ReactNode[] = [];
-      while (i < lines.length) {
-        if (isUl(lines[i])) {
-          const item = lines[i].replace(/^\s*[-*+]\s+/, "");
-          items.push(<li key={items.length}>{parseInline(item, `ul${key}-${items.length}`)}</li>);
-          i++;
-        } else if (lines[i].trim() === "" && i + 1 < lines.length && isUl(lines[i + 1])) {
-          i++; // linha em branco entre itens (lista "solta") — mesma lista
-        } else {
-          break;
-        }
-      }
-      blocks.push(<ul key={key++}>{items}</ul>);
-      continue;
-    }
-
-    if (isOl(line)) {
-      const items: React.ReactNode[] = [];
-      while (i < lines.length) {
-        if (isOl(lines[i])) {
-          const item = lines[i].replace(/^\s*\d+[.)]\s+/, "");
-          items.push(<li key={items.length}>{parseInline(item, `ol${key}-${items.length}`)}</li>);
-          i++;
-        } else if (lines[i].trim() === "" && i + 1 < lines.length && isOl(lines[i + 1])) {
-          i++; // linha em branco entre itens (lista "solta") — mesma lista
-        } else {
-          break;
-        }
-      }
-      blocks.push(<ol key={key++}>{items}</ol>);
-      continue;
-    }
-
-    // parágrafo
-    const para: string[] = [];
-    while (
-      i < lines.length &&
-      lines[i].trim() !== "" &&
-      !isFence(lines[i]) &&
-      !isHeading(lines[i]) &&
-      !isUl(lines[i]) &&
-      !isOl(lines[i]) &&
-      !isQuote(lines[i]) &&
-      !isHr(lines[i])
-    ) {
-      para.push(lines[i]);
-      i++;
-    }
-    const pk = key++;
-    const inlineNodes: React.ReactNode[] = [];
-    para.forEach((p, idx) => {
-      if (idx > 0) inlineNodes.push(<br key={`br${pk}-${idx}`} />);
-      inlineNodes.push(...parseInline(p, `p${pk}-${idx}`));
-    });
-    blocks.push(<p key={pk}>{inlineNodes}</p>);
-  }
-
-  return blocks;
-}
-
-// Memoizado: só re-renderiza a mensagem cujo conteúdo mudou (durante o stream,
-// evita reprocessar o markdown de todas as mensagens a cada token).
+// Renderização de markdown com paridade big-tech:
+// react-markdown + GFM (tabelas, listas de tarefas, ~strike~) + KaTeX (equações)
+// + CodeBlock custom (highlight.js + botão copiar). Memoizado para não reparsear
+// todas as mensagens a cada token durante o streaming.
 const MessageContent = memo(function MessageContent({ content }: { content: string }) {
-  return <>{renderMarkdown(content)}</>;
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm, remarkMath]}
+      rehypePlugins={[rehypeKatex]}
+      components={{
+        // Bloco de código → CodeBlock (com header de linguagem + copiar);
+        // código inline → <code> normal.
+        pre: ({ children }) => <>{children}</>,
+        code({ className, children, ...rest }) {
+          const match = /language-(\w+)/.exec(className || "");
+          const text = String(children).replace(/\n$/, "");
+          if (match || text.includes("\n")) {
+            return <CodeBlock code={text} lang={match?.[1] || ""} />;
+          }
+          return (
+            <code className={className} {...rest}>
+              {children}
+            </code>
+          );
+        },
+        // Links: sempre abrem em nova aba, sem vazar referrer.
+        a: ({ href, children }) => {
+          const safe = href && (href.startsWith("http://") || href.startsWith("https://"));
+          return safe ? (
+            <a href={href} target="_blank" rel="noreferrer noopener">{children}</a>
+          ) : (
+            <span>{children}</span>
+          );
+        },
+        // Tabelas com wrapper para scroll horizontal.
+        table: ({ children }) => (
+          <div className="table-wrap"><table>{children}</table></div>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
 });
 
 type EngineStatus = "checking" | "online" | "offline";
