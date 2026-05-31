@@ -188,6 +188,15 @@ function renderMarkdown(src: string): React.ReactNode[] {
       lines[i + 1].includes("-")
     ) {
       const header = splitRow(line);
+      // Alinhamento por coluna a partir da linha separadora (:--, :--:, --:)
+      const aligns: Array<"left" | "center" | "right"> = splitRow(lines[i + 1]).map((c) => {
+        const left = c.startsWith(":");
+        const right = c.endsWith(":");
+        if (left && right) return "center";
+        if (right) return "right";
+        if (left) return "left";
+        return "left";
+      });
       i += 2;
       const rows: string[][] = [];
       while (i < lines.length && lines[i].includes("|") && lines[i].trim() !== "") {
@@ -195,21 +204,26 @@ function renderMarkdown(src: string): React.ReactNode[] {
         i++;
       }
       const tk = key++;
+      const colAlign = (ci: number) => aligns[ci] || "left";
       blocks.push(
         <div className="table-wrap" key={tk}>
           <table>
             <thead>
               <tr>
                 {header.map((c, ci) => (
-                  <th key={ci}>{parseInline(c, `th${tk}-${ci}`)}</th>
+                  <th key={ci} style={{ textAlign: colAlign(ci) }}>
+                    {parseInline(c, `th${tk}-${ci}`)}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {rows.map((r, ri) => (
                 <tr key={ri}>
-                  {r.map((c, ci) => (
-                    <td key={ci}>{parseInline(c, `td${tk}-${ri}-${ci}`)}</td>
+                  {header.map((_, ci) => (
+                    <td key={ci} style={{ textAlign: colAlign(ci) }}>
+                      {parseInline(r[ci] ?? "", `td${tk}-${ri}-${ci}`)}
+                    </td>
                   ))}
                 </tr>
               ))}
