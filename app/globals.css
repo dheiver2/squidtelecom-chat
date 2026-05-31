@@ -62,13 +62,14 @@ body {
 }
 
 .brand img {
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   object-fit: contain;
-  background: var(--branco);
-  padding: 2px;
-  border: 1px solid var(--borda);
+  background: var(--azul-escuro);
+  padding: 4px;
+  border: none;
+  box-shadow: 0 1px 4px rgba(37,70,121,0.18);
 }
 
 .brand span {
@@ -365,9 +366,10 @@ body {
 }
 
 .row.assistant .avatar {
-  background: var(--branco);
-  border: 1px solid var(--borda);
-  padding: 3px;
+  background: var(--azul-escuro);
+  border: none;
+  padding: 4px;
+  box-shadow: 0 1px 4px rgba(37,70,121,0.18);
 }
 
 .row.assistant .avatar img {
@@ -803,10 +805,14 @@ body {
 }
 
 .greeting img {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   object-fit: contain;
   margin-bottom: 18px;
+  background: var(--azul-escuro);
+  border-radius: 18px;
+  padding: 10px;
+  box-shadow: 0 4px 16px rgba(37,70,121,0.22);
 }
 
 .greeting h1 {
@@ -2030,10 +2036,14 @@ body {
 }
 
 .login-card img {
-  width: 58px;
-  height: 58px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
   margin-bottom: 16px;
+  background: var(--azul-escuro);
+  border-radius: 16px;
+  padding: 10px;
+  box-shadow: 0 4px 14px rgba(37,70,121,0.22);
 }
 
 .login-card h1 {
