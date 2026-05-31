@@ -58,8 +58,8 @@ export async function POST(req: Request) {
     return new Response(
       JSON.stringify({
         error:
-          "Não foi possível conectar ao Mangaba. Verifique se ele está rodando (`mangaba serve`) e se o modelo foi baixado (`mangaba pull mangaba-pro`). " +
-          "Em deploy na Vercel, o Mangaba precisa estar exposto por um túnel público (veja o README).",
+          "Não foi possível conectar ao serviço de IA. Verifique se o servidor (Ollama na VPS) está no ar " +
+          "e se OPENAI_BASE_URL/OPENAI_API_KEY estão corretos nas variáveis de ambiente.",
       }),
       { status: 502, headers: { "Content-Type": "application/json" } }
     );

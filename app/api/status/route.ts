@@ -12,18 +12,25 @@ export async function GET(req: Request) {
     });
   }
 
-  // Base do motor (ex.: túnel HTTPS público apontando para o Mangaba do usuário).
-  // OPENAI_BASE_URL termina em /v1; o endpoint de tags fica na raiz do host.
+  // Base do serviço de IA (ex.: Ollama na VPS atrás de proxy HTTPS + Bearer).
+  // Usamos o endpoint OpenAI-compatible /v1/models com a mesma chave do /api/chat,
+  // para passar pela autenticação do proxy (o /api/tags nativo ficaria 401).
   const baseV1 = (process.env.OPENAI_BASE_URL || "http://localhost:11434/v1").replace(/\/$/, "");
-  const root = baseV1.replace(/\/v1$/, "");
+  const apiKey = process.env.OPENAI_API_KEY || "mangaba";
+  const configured = process.env.OPENAI_MODEL;
 
   try {
-    const res = await fetch(`${root}/api/tags`, { cache: "no-store" });
+    const res = await fetch(`${baseV1}/models`, {
+      cache: "no-store",
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
     if (!res.ok) throw new Error();
     const data = await res.json();
-    const names: string[] = (data.models || []).map((m: { name: string }) => m.name);
-    if (names.length === 0) throw new Error();
-    const real = pickModel(names);
+    // OpenAI-compatible: { data: [{ id }] }
+    const names: string[] = (data.data || []).map((m: { id: string }) => m.id);
+    // Prioriza o modelo configurado; senão escolhe o melhor disponível.
+    const real = configured || pickModel(names);
+    if (!real) throw new Error();
     return Response.json({ online: true, model: brandModel(real) });
   } catch {
     return Response.json({ online: false, model: null });

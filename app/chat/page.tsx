@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useRef, useState } from "react";
 import hljs from "highlight.js/lib/common";
-import { ENGINE_NAME, ENGINE_BASE_URLS, brandModel, pickModel } from "../lib/mangaba";
+import { ENGINE_NAME } from "../lib/mangaba";
 
 type Role = "user" | "assistant";
 interface Message {
@@ -14,12 +14,6 @@ interface Conversation {
   title: string;
   messages: Message[];
 }
-
-const SYSTEM_PROMPT =
-  "Você é o Alpha1 Assistant, o assistente virtual inteligente da Alpha 1 Consultoria — " +
-  "empresa de telecomunicações, gestão e tecnologia da informação que atende empresas em todo o Brasil. " +
-  "Responda sempre em português do Brasil, de forma clara, profissional e prestativa. " +
-  "Use markdown quando ajudar na leitura.";
 
 const SUGGESTIONS = [
   "Quais serviços a Alpha 1 oferece?",
@@ -317,8 +311,6 @@ export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  // Base do motor que respondeu (https://localhost ou http://localhost).
-  const engineBaseRef = useRef<string>(ENGINE_BASE_URLS[0]);
   // Aborta a geração em curso (botão parar).
   const abortRef = useRef<AbortController | null>(null);
   // Auto-scroll só quando o usuário está perto do fim do histórico.
@@ -364,24 +356,23 @@ export default function ChatPage() {
     setCurrentId(fresh.id);
   }, [user]);
 
-  // Verifica a conexão direto com o motor local (no computador do usuário).
-  // O navegador roda na máquina do funcionário, então localhost = a máquina dele.
+  // Verifica a conexão com o serviço de IA via rota server-side (/api/status),
+  // que fala com o Ollama na VPS (atrás de proxy HTTPS + chave). A chave nunca
+  // chega ao navegador — fica só nas variáveis de ambiente do servidor.
   async function checkEngine() {
     setStatus("checking");
-    for (const base of ENGINE_BASE_URLS) {
-      try {
-        const res = await fetch(`${base}/api/tags`, { cache: "no-store" });
-        if (!res.ok) continue;
+    try {
+      const res = await fetch("/api/status", { cache: "no-store" });
+      if (res.ok) {
         const data = await res.json();
-        const names: string[] = (data.models || []).map((m: { name: string }) => m.name);
-        if (!names.length) continue;
-        engineBaseRef.current = base;
-        setModelLabel(brandModel(pickModel(names)));
-        setStatus("online");
-        return;
-      } catch {
-        // tenta o próximo endpoint (ex.: http após https falhar)
+        if (data.online) {
+          if (data.model) setModelLabel(data.model);
+          setStatus("online");
+          return;
+        }
       }
+    } catch {
+      // cai para offline abaixo
     }
     setStatus("offline");
   }
@@ -507,18 +498,25 @@ export default function ChatPage() {
     autoScrollRef.current = true;
     const controller = new AbortController();
     abortRef.current = controller;
-    const apiMessages = [{ role: "system" as const, content: SYSTEM_PROMPT }, ...history];
 
     try {
-      // Fala direto com o motor local (OpenAI-compatible) no computador do usuário.
-      const res = await fetch(`${engineBaseRef.current}/v1/chat/completions`, {
+      // Fala com a rota server-side, que faz proxy autenticado para o serviço de
+      // IA (Ollama na VPS). Não enviamos system prompt nem chave: a rota cuida disso.
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages, stream: true }),
+        body: JSON.stringify({ messages: history }),
         signal: controller.signal,
       });
 
-      if (!res.ok || !res.body) throw new Error(`Falha ao gerar resposta no ${ENGINE_NAME}.`);
+      if (!res.ok || !res.body) {
+        let msg = `Falha ao gerar resposta no ${ENGINE_NAME}.`;
+        try {
+          const e = await res.json();
+          if (e?.error) msg = e.error;
+        } catch {}
+        throw new Error(msg);
+      }
 
       updateCurrent((c) => ({
         ...c,
@@ -535,29 +533,15 @@ export default function ChatPage() {
           return { ...c, messages: msgs };
         });
 
-      // Parse de SSE (formato OpenAI): linhas "data: {json}" + "data: [DONE]".
+      // A rota /api/chat devolve os tokens em TEXTO PURO (já parseou o SSE do
+      // upstream), então é só decodificar e anexar cada pedaço.
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
-      let buffer = "";
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const parts = buffer.split("\n\n");
-        buffer = parts.pop() ?? "";
-        for (const part of parts) {
-          for (const line of part.split("\n")) {
-            const trimmed = line.trim();
-            if (!trimmed.startsWith("data:")) continue;
-            const data = trimmed.slice(5).trim();
-            if (data === "[DONE]") continue;
-            try {
-              const json = JSON.parse(data);
-              const token = json.choices?.[0]?.delta?.content ?? "";
-              if (token) appendToken(token);
-            } catch {}
-          }
-        }
+        const chunk = decoder.decode(value, { stream: true });
+        if (chunk) appendToken(chunk);
       }
     } catch (err) {
       const aborted = err instanceof DOMException && err.name === "AbortError";
@@ -871,19 +855,12 @@ export default function ChatPage() {
 
         {status === "offline" && (
           <div className="engine-banner">
-            <strong>{ENGINE_NAME} não está rodando no seu computador.</strong> Instale e inicie com um
-            único comando:
-            <span className="engine-cmds">
-              <span>
-                <em>macOS / Linux</em>
-                <code>curl -fsSL https://mangaba-site.vercel.app/install.sh | bash</code>
-              </span>
-              <span>
-                <em>Windows (PowerShell)</em>
-                <code>irm https://mangaba-site.vercel.app/install.ps1 | iex</code>
-              </span>
+            <strong>O serviço de IA está indisponível no momento.</strong> Pode ser uma
+            instabilidade temporária do servidor. Tente novamente em instantes; se persistir,
+            avise o suporte de TI.
+            <span className="engine-retry">
+              <button onClick={checkEngine}>Tentar novamente</button>
             </span>
-            Já instalou? <button onClick={checkEngine}>Tentar novamente</button>
           </div>
         )}
 
