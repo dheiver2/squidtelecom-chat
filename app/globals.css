@@ -661,6 +661,15 @@ body {
   padding: 9px 14px;
   text-align: left;
   vertical-align: top;
+  /* Quebra só entre palavras, nunca no meio (sobrescreve o .content) */
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+/* Largura mínima por célula para a tabela rolar em vez de comprimir colunas */
+.content td,
+.content th {
+  min-width: 90px;
 }
 .content th:last-child,
 .content td:last-child {
