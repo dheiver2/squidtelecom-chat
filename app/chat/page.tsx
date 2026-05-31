@@ -338,6 +338,7 @@ export default function ChatPage() {
   const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null);
   const [fileLoading, setFileLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [webSearch, setWebSearch] = useState(false);
   // Multi-modelo
   const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
   const [globalModel, setGlobalModel] = useState<string>("");
@@ -628,7 +629,7 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, model: modelId }),
+        body: JSON.stringify({ messages: history, model: modelId, webSearch }),
         signal: controller.signal,
       });
 
@@ -987,6 +988,16 @@ export default function ChatPage() {
           Extraindo conteúdo do arquivo…
         </div>
       )}
+      {webSearch && (
+        <div className="web-search-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8"/>
+            <path d="M21 21l-4.3-4.3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          </svg>
+          Busca na web ativa — a próxima resposta incluirá resultados da internet
+          <button onClick={() => setWebSearch(false)}>✕</button>
+        </div>
+      )}
       {attachedFile && (
         <div className="file-chip">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -1010,6 +1021,22 @@ export default function ChatPage() {
           style={{ display: "none" }}
           onChange={handleFileSelect}
         />
+        {/* Botão busca na web */}
+        <button
+          className={`attach-btn${webSearch ? " active" : ""}`}
+          onClick={() => setWebSearch((v) => !v)}
+          disabled={loading}
+          aria-label="Buscar na internet"
+          title={webSearch ? "Busca na web ativa — clique para desativar" : "Ativar busca na web"}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8"/>
+            <path d="M21 21l-4.3-4.3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            <path d="M11 8v6M8 11h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+          </svg>
+        </button>
+
+        {/* Botão anexar arquivo */}
         <button
           className="attach-btn"
           onClick={() => fileInputRef.current?.click()}

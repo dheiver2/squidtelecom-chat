@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 
 import { readSessionEdge } from "../../lib/auth-edge";
 import { rateLimit, LIMITS, tooManyRequests } from "../../lib/ratelimit";
+import { searchWeb, formatSearchContext } from "../../lib/search";
 
 const SYSTEM_PROMPT =
   "Você é o Alpha1 Assistant, o assistente virtual inteligente da Alpha 1 Consultoria — " +
@@ -36,10 +37,12 @@ export async function POST(req: Request) {
 
   let messages: ChatMessage[];
   let requestedModel: string | undefined;
+  let webSearch = false;
   try {
     const body = await req.json();
     messages = body.messages;
     requestedModel = typeof body.model === "string" ? body.model : undefined;
+    webSearch = body.webSearch === true;
     if (!Array.isArray(messages)) throw new Error();
 
     // Validação básica
@@ -61,14 +64,23 @@ export async function POST(req: Request) {
     });
   }
 
-  // ── Truncar histórico para reduzir tempo de prefill ──────────────────
-  // Mantém sempre a primeira mensagem do usuário (contexto inicial) +
-  // as últimas MAX_HISTORY_MSGS mensagens. Conversas longas ficam muito
-  // mais rápidas porque o modelo processa menos tokens de entrada.
+  // ── Truncar histórico ──────────────────────────────────────────────
   const trimmed: ChatMessage[] =
     messages.length > MAX_HISTORY_MSGS
       ? [messages[0], ...messages.slice(-MAX_HISTORY_MSGS + 1)]
       : messages;
+
+  // ── Busca na web (injetada como contexto antes do último user msg) ──
+  let searchContext = "";
+  if (webSearch && process.env.BRAVE_SEARCH_API_KEY) {
+    const lastUserMsg = [...trimmed].reverse().find((m) => m.role === "user");
+    if (lastUserMsg) {
+      // Extrai até 120 chars da última mensagem como query de busca
+      const query = lastUserMsg.content.replace(/```[\s\S]*?```/g, "").trim().slice(0, 120);
+      const results = await searchWeb(query, 5);
+      searchContext = formatSearchContext(query, results);
+    }
+  }
 
   const baseUrl = (process.env.OPENAI_BASE_URL || "http://localhost:11434/v1").replace(/\/$/, "");
   const model = requestedModel || process.env.OPENAI_MODEL || "mangaba-pro";
@@ -84,7 +96,15 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model,
         stream: true,
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...trimmed],
+        messages: [
+          {
+            role: "system",
+            content: searchContext
+              ? `${SYSTEM_PROMPT}\n\n${searchContext}`
+              : SYSTEM_PROMPT,
+          },
+          ...trimmed,
+        ],
         // ── Opções de velocidade para o Ollama ───────────────────────────
         // num_ctx: janela de contexto menor = prefill mais rápido.
         //   2048 cobre a maioria das conversas; aumente para 4096 se
