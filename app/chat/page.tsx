@@ -1070,7 +1070,7 @@ export default function ChatPage() {
             </svg>
           </button>
           <div className="model">
-            Alpha1 Assistant
+            <span className="brand-name">Alpha1 Assistant</span>
             {availableModels.length > 1 ? (
               <select
                 className="model-select"
@@ -1101,14 +1101,14 @@ export default function ChatPage() {
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                   <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                .md
+                <span className="btn-label">.md</span>
               </button>
               <button className="export-btn" onClick={exportPrint} title="Exportar como PDF">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                   <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                   <rect x="6" y="14" width="12" height="8" rx="1" stroke="currentColor" strokeWidth="1.8"/>
                 </svg>
-                PDF
+                <span className="btn-label">PDF</span>
               </button>
             </div>
           )}

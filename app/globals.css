@@ -1197,6 +1197,23 @@ body {
   .greeting h1 {
     font-size: 1.4rem;
   }
+
+  /* Topbar enxuta no celular */
+  .topbar { gap: 4px; padding: 0 8px; }
+  .topbar .brand-name { display: none; }      /* dropdown já identifica */
+  .topbar .model { font-size: 0; }            /* esconde texto residual */
+  .model-select { margin-left: 0; max-width: 130px; }
+  .conn { font-size: 0; gap: 0; padding: 6px; } /* só o ponto de status */
+  .export-btn .btn-label { display: none; }    /* exportar vira só ícone */
+  .export-btn { padding: 7px; }
+
+  /* Atalhos de teclado não fazem sentido no toque */
+  .kbd-hint { display: none; }
+
+  /* Thread e composer com menos margem lateral */
+  .thread { padding: 18px 12px 28px; }
+  .composer-outer { padding: 6px 10px 12px; }
+  .conv-model-badge { display: none; }         /* economiza espaço na sidebar */
 }
 
 /* ============ LANDING — IDENTIDADE ALPHA 1 ============ */
