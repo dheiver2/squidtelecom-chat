@@ -27,6 +27,11 @@ const TEAM: Record<string, string> = {
   "williamsandrevieiradasilva@gmail.com": "Williams Andre Vieira da Silva",
 };
 
+/** Lista de todos os e-mails autorizados (para provisionamento). */
+export function allowedEmails(): string[] {
+  return Object.keys(TEAM);
+}
+
 /** Normaliza um e-mail para comparação (minúsculo, sem espaços). */
 export function normalizeEmail(email: string): string {
   return String(email || "").trim().toLowerCase();
