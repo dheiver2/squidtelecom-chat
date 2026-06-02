@@ -189,6 +189,75 @@ function SheetCard({ json }: { json: string }) {
   );
 }
 
+// Cartão de documento Word: detecta o bloco ```alpha1-doc, mostra prévia e
+// botão de download (.docx gerado em /api/document).
+function DocCard({ json }: { json: string }) {
+  const [downloading, setDownloading] = useState(false);
+  const [err, setErr] = useState("");
+
+  let spec: { title?: string; blocks?: Array<{ type?: string; text?: string; items?: string[]; columns?: string[] }> } | null = null;
+  try { spec = JSON.parse(json); } catch { spec = null; }
+
+  if (!spec || !Array.isArray(spec.blocks) || !spec.blocks.length) {
+    return (
+      <div className="sheet-card pending">
+        <span className="typing"><span/><span/><span/></span>
+        Preparando documento…
+      </div>
+    );
+  }
+
+  const blocks = spec.blocks;
+  const headings = blocks.filter((b) => b.type === "heading").length;
+  const tables = blocks.filter((b) => b.type === "table").length;
+
+  async function download() {
+    setErr("");
+    setDownloading(true);
+    try {
+      const res = await fetch("/api/document", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: json,
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || "Falha ao gerar o documento.");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(spec!.title || "documento").replace(/[^a-z0-9_\-]+/gi, "_").toLowerCase()}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Erro inesperado.");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
+  return (
+    <div className="sheet-card">
+      <div className="sheet-head">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="currentColor" strokeWidth="1.8"/>
+          <path d="M14 2v6h6M8 13h8M8 17h8M8 9h2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
+        <span className="sheet-title">{spec.title || "Documento"}</span>
+        <button className="sheet-dl" onClick={download} disabled={downloading} type="button">
+          {downloading ? "Gerando…" : "Baixar .docx"}
+        </button>
+      </div>
+      <div className="sheet-more">
+        {blocks.length} bloco(s){headings ? ` · ${headings} título(s)` : ""}{tables ? ` · ${tables} tabela(s)` : ""}
+      </div>
+      {err && <div className="error">{err}</div>}
+    </div>
+  );
+}
+
 /** Fecha cercas de código (```) ainda abertas durante o streaming, para o bloco
  *  não "piscar" entre inline e bloco enquanto o fechamento não chegou. */
 function balanceCodeFences(text: string): string {
@@ -209,9 +278,12 @@ const MessageContent = memo(function MessageContent({ content }: { content: stri
         code({ className, children, ...rest }) {
           const match = /language-([\w-]+)/.exec(className || "");
           const text = String(children).replace(/\n$/, "");
-          // Bloco especial de planilha → cartão com prévia + download.
+          // Blocos especiais → cartões com prévia + download.
           if (match?.[1] === "alpha1-sheet") {
             return <SheetCard json={text} />;
+          }
+          if (match?.[1] === "alpha1-doc") {
+            return <DocCard json={text} />;
           }
           if (match || text.includes("\n")) {
             return <CodeBlock code={text} lang={match?.[1] || ""} />;
@@ -971,7 +1043,66 @@ export default function ChatPage() {
     if (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) {
       return extractPdfText(file);
     }
+    // Word (.docx)
+    if (/\.docx$/i.test(file.name) ||
+        file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      return extractDocxText(file);
+    }
+    // Excel (.xlsx)
+    if (/\.xlsx$/i.test(file.name) ||
+        file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+      return extractXlsxText(file);
+    }
     throw new Error("Tipo não suportado");
+  }
+
+  // Lê .docx → texto puro (mammoth, build de browser para não puxar deps Node).
+  async function extractDocxText(file: File): Promise<string> {
+    const arrayBuffer = await file.arrayBuffer();
+    const mammoth = await import("mammoth/mammoth.browser");
+    const result = await mammoth.extractRawText({ arrayBuffer });
+    return result.value || "";
+  }
+
+  // Lê .xlsx → cada aba vira uma tabela markdown (exceljs, build de browser).
+  async function extractXlsxText(file: File): Promise<string> {
+    const arrayBuffer = await file.arrayBuffer();
+    const ExcelJS = (await import("exceljs")).default as typeof import("exceljs");
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(arrayBuffer);
+    const MAX_ROWS = 200; // teto por aba para não estourar o contexto
+    const out: string[] = [];
+    wb.eachSheet((ws) => {
+      const rows: string[][] = [];
+      ws.eachRow({ includeEmpty: false }, (row) => {
+        if (rows.length >= MAX_ROWS) return;
+        const cells: string[] = [];
+        row.eachCell({ includeEmpty: true }, (cell) => {
+          const v = cell.value as unknown;
+          let text = "";
+          if (v == null) text = "";
+          else if (typeof v === "object" && "text" in (v as Record<string, unknown>)) {
+            text = String((v as { text: unknown }).text ?? "");
+          } else if (typeof v === "object" && "result" in (v as Record<string, unknown>)) {
+            text = String((v as { result: unknown }).result ?? ""); // fórmula → valor
+          } else {
+            text = String(v);
+          }
+          cells.push(text.replace(/\|/g, "\\|").replace(/\n/g, " ").trim());
+        });
+        rows.push(cells);
+      });
+      if (!rows.length) return;
+      out.push(`## ${ws.name}`);
+      const width = Math.max(...rows.map((r) => r.length));
+      const pad = (r: string[]) => { while (r.length < width) r.push(""); return r; };
+      const header = pad([...rows[0]]);
+      out.push(`| ${header.join(" | ")} |`);
+      out.push(`| ${header.map(() => "---").join(" | ")} |`);
+      for (const r of rows.slice(1)) out.push(`| ${pad([...r]).join(" | ")} |`);
+      out.push("");
+    });
+    return out.join("\n") || "[Planilha vazia]";
   }
 
   async function extractPdfText(file: File): Promise<string> {
@@ -1116,7 +1247,7 @@ export default function ChatPage() {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".txt,.md,.csv,.json,.xml,.js,.ts,.py,.html,.css,.sql,.yaml,.yml,.sh,.log,.pdf"
+          accept=".txt,.md,.csv,.json,.xml,.js,.ts,.py,.html,.css,.sql,.yaml,.yml,.sh,.log,.pdf,.docx,.xlsx"
           style={{ display: "none" }}
           onChange={handleFileSelect}
         />
@@ -1141,7 +1272,7 @@ export default function ChatPage() {
           onClick={() => fileInputRef.current?.click()}
           disabled={loading}
           aria-label="Anexar arquivo"
-          title="Anexar arquivo (PDF, texto, CSV…)"
+          title="Anexar arquivo (PDF, Word, Excel, texto, CSV…)"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>

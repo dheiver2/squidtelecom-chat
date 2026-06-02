@@ -31,7 +31,25 @@ const SYSTEM_PROMPT =
   "```\n" +
   "Regras do bloco: valores monetários como NÚMEROS (sem 'R$' nem separador de milhar), " +
   "`currencyColumns` são os índices 0-based das colunas de dinheiro, e o JSON deve ser " +
-  "válido (sem comentários). Gere o bloco somente quando uma planilha for de fato útil.";
+  "válido (sem comentários). Gere o bloco somente quando uma planilha for de fato útil.\n\n" +
+  "GERAÇÃO DE DOCUMENTOS WORD: quando o usuário pedir um documento, proposta, relatório, " +
+  "carta, contrato ou texto formatado em Word, responda normalmente e, ao final, inclua um " +
+  "único bloco de código com a linguagem `alpha1-doc` contendo APENAS um JSON válido assim:\n" +
+  "```alpha1-doc\n" +
+  "{\n" +
+  '  "title": "Proposta Comercial",\n' +
+  '  "blocks": [\n' +
+  '    { "type": "heading", "level": 1, "text": "Introdução" },\n' +
+  '    { "type": "paragraph", "text": "Texto do parágrafo." },\n' +
+  '    { "type": "bullets", "items": ["Item A", "Item B"] },\n' +
+  '    { "type": "numbered", "items": ["Passo 1", "Passo 2"] },\n' +
+  '    { "type": "table", "columns": ["Item", "Valor"], "rows": [["Plano X", "R$ 100"]] }\n' +
+  "  ]\n" +
+  "}\n" +
+  "```\n" +
+  "Tipos de bloco: heading (level 1-4), paragraph, bullets, numbered, table. O JSON deve ser " +
+  "válido. Gere o bloco somente quando um documento Word for de fato útil; caso contrário, " +
+  "responda normalmente em markdown.";
 
 // Janela de contexto enviada ao modelo.
 // Manter curto = prefill mais rápido = primeiro token mais rápido.
