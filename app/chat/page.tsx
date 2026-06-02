@@ -1434,10 +1434,10 @@ export default function ChatPage() {
           <div className="user-pill">
             <span className="ava">{initial}</span>
             <span className="txt">
-              {displayLabel}
-              <small>{userName ? user : "Funcionário Alpha 1"}</small>
+              <span className="name-line" title={displayLabel}>{displayLabel}</span>
+              <small title={userName ? user : undefined}>{userName ? user : "Funcionário Alpha 1"}</small>
             </span>
-            <button className="logout-btn" onClick={logout} aria-label="Sair">
+            <button className="logout-btn" onClick={logout} aria-label="Sair" title="Sair">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>

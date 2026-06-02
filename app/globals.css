@@ -338,8 +338,18 @@ body {
 }
 
 .user-pill .txt {
+  flex: 1;
+  min-width: 0; /* permite encolher e truncar — não empurra o botão Sair pra fora */
+  overflow: hidden;
+}
+
+.user-pill .txt .name-line {
+  display: block;
   font-size: 0.85rem;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-pill .txt small {
@@ -347,6 +357,9 @@ body {
   font-weight: 400;
   color: var(--texto-suave);
   font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ============ MAIN ============ */
@@ -2784,6 +2797,7 @@ body {
 
 .logout-btn {
   margin-left: auto;
+  flex-shrink: 0; /* nunca some — fica sempre visível e clicável */
   border: none;
   background: transparent;
   cursor: pointer;
