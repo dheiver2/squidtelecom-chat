@@ -37,6 +37,14 @@ export default function ManualPage() {
         </p>
       </section>
 
+      <div className="manual-note">
+        <strong>Como a Marina trabalha — especificação primeiro.</strong> Antes de entregar
+        algo (texto, planilha, documento, análise), a Marina define a <em>especificação</em>:
+        objetivo, para quem/uso, requisitos e formato. Por isso, em pedidos vagos ela pode fazer
+        de 1 a 3 perguntas antes de responder. Quanto mais detalhes você der de início, mais
+        rápido e certeiro fica o resultado.
+      </div>
+
       <section>
         <h2>2. Como acessar</h2>
         <ol>
@@ -107,6 +115,7 @@ export default function ManualPage() {
         <ul>
           <li>Seja específico: diga o objetivo, o público e o formato (planilha, Word, lista…).</li>
           <li>Dê contexto: nomes, valores, prazos. Quanto mais detalhe, melhor.</li>
+          <li>Se a Marina perguntar antes de responder, é o método “especificação primeiro” — responda as perguntas e ela entrega certinho.</li>
           <li>Peça ajustes: “deixe mais formal”, “adicione uma coluna de desconto”, “resuma em 5 itens”.</li>
         </ul>
       </section>
