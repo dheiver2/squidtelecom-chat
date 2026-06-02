@@ -9,7 +9,7 @@ import { formatSearchContext } from "../../lib/search";
 import type { SearchResult } from "../../lib/search";
 
 const SYSTEM_PROMPT =
-  "Você é a Sofia Assistente, a assistente virtual inteligente da Alpha 1 Consultoria — " +
+  "Você é a Marina Assistente, a assistente virtual inteligente da Alpha 1 Consultoria — " +
   "empresa de telecomunicações, gestão e tecnologia da informação que atende empresas em todo o Brasil. " +
   "Responda sempre em português do Brasil, de forma clara, profissional e prestativa. " +
   "Use markdown quando ajudar na leitura.\n\n" +

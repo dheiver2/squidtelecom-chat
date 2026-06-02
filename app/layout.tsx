@@ -3,7 +3,7 @@ import "highlight.js/styles/github-dark.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sofia Assistente",
+  title: "Marina Assistente",
   description: "Assistente virtual inteligente da Alpha 1 Consultoria — telecom, gestão e TI.",
   icons: { icon: "/logo-alpha1.png" },
 };

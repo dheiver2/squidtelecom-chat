@@ -60,7 +60,7 @@ export async function POST(req: Request) {
     for (const b of spec.blocks) children.push(...renderBlock(b));
 
     const doc = new Document({
-      creator: "Sofia Assistente",
+      creator: "Marina Assistente",
       numbering: {
         config: [{
           reference: "num",
