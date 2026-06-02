@@ -396,10 +396,8 @@ export default function ChatPage() {
   const [user, setUser] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>(""); // nome de exibição do funcionário
   const [authChecking, setAuthChecking] = useState(true);
-  const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
-  const [password2Input, setPassword2Input] = useState("");
   const [loginError, setLoginError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
   const [status, setStatus] = useState<EngineStatus>("checking");
@@ -770,49 +768,6 @@ export default function ChatPage() {
     setUserName("");
     setUsernameInput("");
     setPasswordInput("");
-    setPassword2Input("");
-  }
-
-  async function register(e: React.FormEvent) {
-    e.preventDefault();
-    const username = usernameInput.trim().toLowerCase();
-    const password = passwordInput;
-    if (!username || !password || loggingIn) return;
-    if (password !== password2Input) {
-      setLoginError("As senhas não coincidem.");
-      return;
-    }
-    if (password.length < 6) {
-      setLoginError("Senha deve ter no mínimo 6 caracteres.");
-      return;
-    }
-    setLoginError("");
-    setLoggingIn(true);
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok) { setLoginError(d.error || "Erro ao criar conta."); return; }
-      // Cadastro ok → faz login automático
-      const res2 = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-      const d2 = await res2.json().catch(() => ({}));
-      if (!res2.ok) { setAuthMode("login"); setLoginError("Conta criada! Faça login."); return; }
-      setPasswordInput("");
-      setPassword2Input("");
-      setUser(d2.user);
-      setUserName(d2.name || "");
-    } catch {
-      setLoginError("Falha de conexão. Tente novamente.");
-    } finally {
-      setLoggingIn(false);
-    }
   }
 
   // Núcleo da geração: recebe o histórico (terminando numa msg do usuário),
@@ -1218,13 +1173,9 @@ export default function ChatPage() {
       <div className="login-screen">
         <div className="login-card">
           <img src="/logo-alpha1.png" alt="Alpha 1" />
-          <h1>{authMode === "login" ? "Entrar" : "Criar conta"}</h1>
-          <p>
-            {authMode === "login"
-              ? "Entre com seu e-mail e senha para usar a Marina Assistente."
-              : "Crie sua conta com seu e-mail corporativo para usar a Marina Assistente."}
-          </p>
-          <form onSubmit={authMode === "login" ? login : register}>
+          <h1>Entrar</h1>
+          <p>Entre com seu e-mail e senha para usar a Marina Assistente.</p>
+          <form onSubmit={login}>
             <input
               type="email"
               value={usernameInput}
@@ -1238,45 +1189,19 @@ export default function ChatPage() {
               value={passwordInput}
               onChange={(e) => { setPasswordInput(e.target.value); setLoginError(""); }}
               placeholder="Senha"
-              autoComplete={authMode === "login" ? "current-password" : "new-password"}
+              autoComplete="current-password"
             />
-            {authMode === "register" && (
-              <input
-                type="password"
-                value={password2Input}
-                onChange={(e) => { setPassword2Input(e.target.value); setLoginError(""); }}
-                placeholder="Confirmar senha"
-                autoComplete="new-password"
-              />
-            )}
             <button
               type="submit"
-              disabled={
-                !usernameInput.trim() || !passwordInput ||
-                (authMode === "register" && !password2Input) || loggingIn
-              }
+              disabled={!usernameInput.trim() || !passwordInput || loggingIn}
             >
-              {loggingIn
-                ? authMode === "login" ? "Entrando…" : "Criando conta…"
-                : authMode === "login" ? "Entrar" : "Criar conta"}
+              {loggingIn ? "Entrando…" : "Entrar"}
             </button>
           </form>
           {loginError && <div className="login-error">{loginError}</div>}
-          <div className="login-switch">
-            {authMode === "login" ? (
-              <>Não tem conta?{" "}
-                <button onClick={() => { setAuthMode("register"); setLoginError(""); setPasswordInput(""); setPassword2Input(""); }}>
-                  Criar conta
-                </button>
-              </>
-            ) : (
-              <>Já tem conta?{" "}
-                <button onClick={() => { setAuthMode("login"); setLoginError(""); setPasswordInput(""); setPassword2Input(""); }}>
-                  Entrar
-                </button>
-              </>
-            )}
-          </div>
+          <p className="login-help">
+            Acesso restrito aos funcionários da Alpha 1. Sem acesso? Fale com o administrador.
+          </p>
           <a className="login-back" href="/">← Voltar ao início</a>
         </div>
       </div>

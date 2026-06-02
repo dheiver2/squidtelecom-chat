@@ -2671,6 +2671,13 @@ body {
   margin-bottom: 14px;
 }
 
+.login-help {
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+  margin-top: 14px;
+  line-height: 1.5;
+}
+
 .login-back {
   display: block;
   color: var(--azul-vivo);
