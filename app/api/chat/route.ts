@@ -116,9 +116,10 @@ export async function POST(req: Request) {
     ? formatSearchContext(searchQuery, searchResults)
     : "";
 
-  // ── Provedores (compatíveis com OpenAI, ex.: Hugging Face) ───────────
-  // Failover automático: primário + reserva opcional. Se o primário falhar
-  // (conexão, timeout ou status != 2xx), tentamos o próximo antes de desistir.
+  // ── Failover entre MODELOS do mesmo provedor (Hugging Face) ──────────
+  // Mesma base e mesma chave; se um modelo falhar (conexão, timeout ou status
+  // != 2xx), tentamos o próximo modelo da lista antes de desistir. NÃO troca
+  // de provedor.
   const payloadMessages = [
     {
       role: "system",
@@ -127,34 +128,30 @@ export async function POST(req: Request) {
     ...trimmed,
   ];
 
-  type Provider = { baseUrl: string; model: string; apiKey: string };
-  const primaryModel = requestedModel || process.env.OPENAI_MODEL || "";
-  const providers: Provider[] = [
-    {
-      baseUrl: (process.env.OPENAI_BASE_URL || "https://router.huggingface.co/v1").replace(/\/$/, ""),
-      model: primaryModel,
-      apiKey,
-    },
-  ];
-  // Reserva: outro endpoint/modelo (ex.: outro modelo no HF, Groq ou OpenAI).
-  if (process.env.OPENAI_BASE_URL_FALLBACK) {
-    providers.push({
-      baseUrl: process.env.OPENAI_BASE_URL_FALLBACK.replace(/\/$/, ""),
-      model: process.env.OPENAI_MODEL_FALLBACK || primaryModel,
-      apiKey: process.env.OPENAI_API_KEY_FALLBACK || apiKey,
-    });
-  }
+  const baseUrl = (process.env.OPENAI_BASE_URL || "https://router.huggingface.co/v1").replace(/\/$/, "");
+
+  // Ordem dos modelos: o pedido pelo cliente (ou OPENAI_MODEL) primeiro, depois
+  // os modelos de reserva em OPENAI_MODEL_FALLBACKS (lista separada por vírgula).
+  const fallbackModels = (process.env.OPENAI_MODEL_FALLBACKS || "")
+    .split(",")
+    .map((m) => m.trim())
+    .filter(Boolean);
+  const models = Array.from(
+    new Set(
+      [requestedModel || process.env.OPENAI_MODEL || "", ...fallbackModels].filter(Boolean)
+    )
+  );
 
   // Timeout só para a CONEXÃO/headers — não corta o streaming já iniciado.
   const CONNECT_TIMEOUT_MS = 20_000;
-  async function openUpstream(p: Provider): Promise<Response | null> {
+  async function openUpstream(modelId: string): Promise<Response | null> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), CONNECT_TIMEOUT_MS);
     try {
-      const res = await fetch(`${p.baseUrl}/chat/completions`, {
+      const res = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${p.apiKey}` },
-        body: JSON.stringify({ model: p.model, stream: true, messages: payloadMessages }),
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: modelId, stream: true, messages: payloadMessages }),
         signal: controller.signal,
       });
       clearTimeout(timer);
@@ -170,8 +167,8 @@ export async function POST(req: Request) {
   }
 
   let upstream: Response | null = null;
-  for (const p of providers) {
-    upstream = await openUpstream(p);
+  for (const modelId of models) {
+    upstream = await openUpstream(modelId);
     if (upstream) break;
   }
   if (!upstream) {
