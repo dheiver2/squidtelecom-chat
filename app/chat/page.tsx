@@ -1202,6 +1202,7 @@ export default function ChatPage() {
           <p className="login-help">
             Acesso restrito aos funcionários da Alpha 1. Sem acesso? Fale com o administrador.
           </p>
+          <a className="login-back" href="/manual">📘 Como usar a Marina (manual)</a>
           <a className="login-back" href="/">← Voltar ao início</a>
         </div>
       </div>

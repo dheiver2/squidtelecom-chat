@@ -69,6 +69,11 @@ export default function Landing() {
               </a>
             </li>
             <li className="nav-item">
+              <a href="/manual" className="nav-link">
+                Manual
+              </a>
+            </li>
+            <li className="nav-item">
               <a href="/chat" className="nav-link nav-link-cta">
                 Entrar
               </a>
