@@ -674,13 +674,15 @@ export default function ChatPage() {
     const modelId = modelOverride || current?.model || globalModel || undefined;
 
     try {
-      // Se busca na web ativa: chama /api/search com a última mensagem do usuário
-      let searchResults: Array<{ title: string; url: string; description: string }> = [];
+      // Se busca na web ativa: o servidor planeja sub-queries a partir da
+      // pergunta, busca em paralelo, deduplica e lê as páginas.
+      let searchResults: Array<{ title: string; url: string; description: string; content?: string }> = [];
       let searchQuery = "";
       if (webSearch) {
         const lastUser = [...history].reverse().find((m) => m.role === "user");
         if (lastUser) {
-          searchQuery = lastUser.content.replace(/```[\s\S]*?```/g, "").trim().slice(0, 120);
+          // Envia a pergunta mais completa (o planejador usa o contexto inteiro).
+          searchQuery = lastUser.content.replace(/```[\s\S]*?```/g, "").trim().slice(0, 500);
           try {
             const sr = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`, {
               signal: controller.signal,
