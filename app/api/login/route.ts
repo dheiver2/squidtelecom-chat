@@ -7,10 +7,7 @@ import { rateLimit, LIMITS, getIp, tooManyRequests } from "../../lib/ratelimit";
 import { isAllowedEmail, normalizeEmail, displayName } from "../../lib/allowlist";
 
 export async function POST(req: Request) {
-  // Rate limiting: 5 tentativas / 15 min por IP
   const ip = getIp(req);
-  const rl = await rateLimit(`login:${ip}`, LIMITS.login.limit, LIMITS.login.windowSecs);
-  if (!rl.allowed) return tooManyRequests(rl.resetAt);
 
   let username = "";
   let password = "";
@@ -24,6 +21,11 @@ export async function POST(req: Request) {
   if (!username || !password) {
     return Response.json({ error: "E-mail ou senha inválidos." }, { status: 401 });
   }
+
+  // Rate limiting por IP + e-mail: protege cada conta contra força bruta sem
+  // travar o escritório inteiro (vários funcionários saem pelo mesmo IP).
+  const rl = await rateLimit(`login:${ip}:${username}`, LIMITS.login.limit, LIMITS.login.windowSecs);
+  if (!rl.allowed) return tooManyRequests(rl.resetAt);
   // Trava: somente e-mails autorizados (bloqueia até contas antigas fora da lista).
   if (!isAllowedEmail(username)) {
     return Response.json(

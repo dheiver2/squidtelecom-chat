@@ -94,7 +94,7 @@ export async function rateLimit(
 
 // Limites pré-configurados por endpoint
 export const LIMITS = {
-  login:    { limit: 5,  windowSecs: 15 * 60 }, // 5 tentativas / 15 min por IP
+  login:    { limit: 10, windowSecs: 15 * 60 }, // 10 tentativas / 15 min por IP+e-mail
   register: { limit: 3,  windowSecs: 60 * 60 }, // 3 cadastros / hora por IP
   chat:     { limit: 30, windowSecs: 60 },       // 30 msgs / min por usuário
 } as const;
