@@ -2035,13 +2035,13 @@ body {
   margin: 0 auto;
   padding: 72px 24px 24px;
   display: grid;
-  grid-template-columns: minmax(220px, 340px) 1fr;
+  grid-template-columns: minmax(300px, 480px) 1fr;
   gap: 48px;
   align-items: center;
 }
 .marina-photo {
   position: relative;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 16 / 10;
   border-radius: 22px;
   overflow: hidden;
   background: linear-gradient(135deg, var(--azul-escuro), var(--azul-vivo));
@@ -2131,7 +2131,7 @@ body {
     padding: 48px 20px 8px;
   }
   .marina-photo {
-    max-width: 280px;
+    max-width: 440px;
     margin: 0 auto;
     width: 100%;
   }
