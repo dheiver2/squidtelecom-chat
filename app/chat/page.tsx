@@ -1049,7 +1049,7 @@ export default function ChatPage() {
     if (!current) return;
     const lines = [`# ${current.title}\n`];
     for (const m of current.messages) {
-      lines.push(m.role === "user" ? `**Você:** ${m.content}` : `**Alpha1 Assistant:** ${m.content}`);
+      lines.push(m.role === "user" ? `**Você:** ${m.content}` : `**Sofia Assistente:** ${m.content}`);
       lines.push("");
     }
     const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
@@ -1201,8 +1201,8 @@ export default function ChatPage() {
           <h1>{authMode === "login" ? "Entrar" : "Criar conta"}</h1>
           <p>
             {authMode === "login"
-              ? "Entre com seu usuário e senha para usar o Alpha1 Assistant."
-              : "Crie sua conta gratuita para usar o Alpha1 Assistant."}
+              ? "Entre com seu usuário e senha para usar a Sofia Assistente."
+              : "Crie sua conta gratuita para usar a Sofia Assistente."}
           </p>
           <form onSubmit={authMode === "login" ? login : register}>
             <input
@@ -1338,7 +1338,7 @@ export default function ChatPage() {
         <textarea
           ref={textareaRef}
           value={input}
-          placeholder={attachedFile ? "Adicione uma pergunta ou envie para resumir…" : "Envie uma mensagem para o Alpha1 Assistant"}
+          placeholder={attachedFile ? "Adicione uma pergunta ou envie para resumir…" : "Envie uma mensagem para a Sofia Assistente"}
           rows={1}
           onChange={(e) => {
             setInput(e.target.value);
@@ -1360,7 +1360,7 @@ export default function ChatPage() {
           </button>
         )}
       </div>
-      <div className="disclaimer">Alpha1 Assistant pode cometer erros. Confira informações importantes.</div>
+      <div className="disclaimer">Sofia Assistente pode cometer erros. Confira informações importantes.</div>
       <div className="kbd-hint">
         <span><kbd>↑</kbd> editar última mensagem</span>
         <span><kbd>Esc</kbd> parar</span>
@@ -1377,7 +1377,7 @@ export default function ChatPage() {
         <div className="sidebar-top">
           <div className="brand">
             <img src="/logo-alpha1.png" alt="Alpha 1" />
-            <span>Alpha1 Assistant</span>
+            <span>Sofia Assistente</span>
             <button
               className="collapse-btn"
               onClick={toggleSidebarCollapsed}
@@ -1515,7 +1515,7 @@ export default function ChatPage() {
             </svg>
           </button>
           <div className="model">
-            <span className="brand-name">Alpha1 Assistant</span>
+            <span className="brand-name">Sofia Assistente</span>
             {availableModels.length > 1 ? (
               <select
                 className="model-select"
@@ -1660,7 +1660,7 @@ export default function ChatPage() {
                         <img src="/logo-alpha1.png" alt="A1" />
                       </div>
                       <div className="content">
-                        <div className="name">Alpha1 Assistant</div>
+                        <div className="name">Sofia Assistente</div>
                         {m.content === "" ? (
                           <span className="typing">
                             <span />
@@ -1721,7 +1721,7 @@ export default function ChatPage() {
                       <img src="/logo-alpha1.png" alt="A1" />
                     </div>
                     <div className="content">
-                      <div className="name">Alpha1 Assistant</div>
+                      <div className="name">Sofia Assistente</div>
                       <span className="typing">
                         <span />
                         <span />
