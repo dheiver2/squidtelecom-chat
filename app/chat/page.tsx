@@ -265,12 +265,68 @@ function balanceCodeFences(text: string): string {
   return fences % 2 === 1 ? text + "\n```" : text;
 }
 
-const MessageContent = memo(function MessageContent({ content }: { content: string }) {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Divide um texto em nós, trocando [n] (n válido) por um link <a> para a fonte.
+function splitCitations(text: string, sources: Source[]): any[] {
+  const out: any[] = [];
+  const re = /\[(\d+)\]/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    const n = parseInt(m[1], 10);
+    if (n >= 1 && n <= sources.length) {
+      if (m.index > last) out.push({ type: "text", value: text.slice(last, m.index) });
+      out.push({
+        type: "element",
+        tagName: "a",
+        properties: {
+          href: sources[n - 1].url,
+          target: "_blank",
+          rel: "noreferrer noopener",
+          className: ["cite-ref"],
+          title: sources[n - 1].title,
+        },
+        children: [{ type: "text", value: `[${n}]` }],
+      });
+      last = m.index + m[0].length;
+    }
+  }
+  if (out.length === 0) return [{ type: "text", value: text }];
+  if (last < text.length) out.push({ type: "text", value: text.slice(last) });
+  return out;
+}
+
+// Plugin rehype: ancora as citações [n] às fontes, sem tocar em código/links.
+function rehypeCitations(sources?: Source[]) {
+  return (tree: any) => {
+    if (!sources || !sources.length) return;
+    const walk = (node: any, skip: boolean) => {
+      if (!node || !Array.isArray(node.children)) return;
+      const next: any[] = [];
+      for (const child of node.children) {
+        if (child.type === "element") {
+          const childSkip = skip || ["code", "pre", "a"].includes(child.tagName);
+          walk(child, childSkip);
+          next.push(child);
+        } else if (child.type === "text" && !skip && /\[\d+\]/.test(child.value)) {
+          next.push(...splitCitations(child.value, sources));
+        } else {
+          next.push(child);
+        }
+      }
+      node.children = next;
+    };
+    walk(tree, false);
+  };
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+const MessageContent = memo(function MessageContent({ content, sources }: { content: string; sources?: Source[] }) {
   const safe = balanceCodeFences(content);
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm, remarkMath]}
-      rehypePlugins={[rehypeKatex]}
+      rehypePlugins={[rehypeKatex, rehypeCitations(sources)]}
       components={{
         // Bloco de código → CodeBlock (com header de linguagem + copiar);
         // código inline → <code> normal.
@@ -295,10 +351,10 @@ const MessageContent = memo(function MessageContent({ content }: { content: stri
           );
         },
         // Links: sempre abrem em nova aba, sem vazar referrer.
-        a: ({ href, children }) => {
-          const safe = href && (href.startsWith("http://") || href.startsWith("https://"));
-          return safe ? (
-            <a href={href} target="_blank" rel="noreferrer noopener">{children}</a>
+        a: ({ href, children, className }) => {
+          const ok = href && (href.startsWith("http://") || href.startsWith("https://"));
+          return ok ? (
+            <a href={href} className={className as string | undefined} target="_blank" rel="noreferrer noopener">{children}</a>
           ) : (
             <span>{children}</span>
           );
@@ -806,7 +862,8 @@ export default function ChatPage() {
           const msgs = [...c.messages];
           const last = msgs[msgs.length - 1];
           if (!last || last.role !== "assistant") return c;
-          msgs[msgs.length - 1] = { role: "assistant", content: last.content + add };
+          // Preserva campos como `sources` (citações) ao anexar tokens.
+          msgs[msgs.length - 1] = { ...last, content: last.content + add };
           return { ...c, messages: msgs };
         });
       };
@@ -1612,7 +1669,7 @@ export default function ChatPage() {
                           </span>
                         ) : (
                           <>
-                            <MessageContent content={m.content} />
+                            <MessageContent content={m.content} sources={m.sources} />
                             {m.sources && m.sources.length > 0 && <Sources sources={m.sources} />}
                             {loading && i === messages.length - 1 && (
                               <span className="stream-caret" aria-hidden="true" />

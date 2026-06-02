@@ -485,6 +485,7 @@ body {
 .content > .name + * {
   margin-top: 0;
 }
+.content h1,
 .content h2,
 .content h3,
 .content h4,
@@ -494,6 +495,9 @@ body {
   font-weight: 700;
   line-height: 1.3;
   margin: 18px 0 8px;
+}
+.content h1 {
+  font-size: 1.4rem;
 }
 .content h2 {
   font-size: 1.22rem;
@@ -505,6 +509,12 @@ body {
 .content h5,
 .content h6 {
   font-size: 1rem;
+}
+.content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 10px 0;
 }
 .content ul,
 .content ol {
@@ -678,6 +688,25 @@ body {
   margin-top: 8px;
   font-size: 0.8rem;
   color: var(--texto-suave, #6b7280);
+}
+
+/* Citação inline [n] clicável → fonte */
+.content a.cite-ref {
+  display: inline-block;
+  font-size: 0.72em;
+  font-weight: 700;
+  line-height: 1;
+  padding: 1px 5px;
+  margin: 0 1px;
+  border-radius: 5px;
+  text-decoration: none;
+  color: var(--azul-vivo, #1f6feb);
+  background: rgba(31, 111, 235, 0.12);
+  vertical-align: super;
+}
+.content a.cite-ref:hover {
+  background: var(--azul-vivo, #1f6feb);
+  color: #fff;
 }
 
 /* Bloco de fontes (citações da web) */
