@@ -2029,6 +2029,114 @@ body {
 .vantagens {
   padding: 84px 0 56px;
 }
+/* ===================== CONHEÇA A MARINA ===================== */
+.marina {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 72px 24px 24px;
+  display: grid;
+  grid-template-columns: minmax(220px, 340px) 1fr;
+  gap: 48px;
+  align-items: center;
+}
+.marina-photo {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--azul-escuro), var(--azul-vivo));
+  box-shadow: 0 24px 60px rgba(37, 70, 121, 0.25);
+}
+.marina-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+.marina-photo-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 7rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: -2px;
+}
+.marina-photo-badge {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #0b1f3a;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 13px;
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+.marina-photo-badge .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+}
+.marina-copy .marina-lead {
+  color: var(--texto-suave);
+  font-size: 1.06rem;
+  line-height: 1.75;
+  margin: 10px 0 18px;
+}
+.marina-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 26px;
+  display: grid;
+  gap: 11px;
+}
+.marina-list li {
+  position: relative;
+  padding-left: 30px;
+  line-height: 1.5;
+  color: var(--texto);
+}
+.marina-list li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--azul-vivo);
+  border-radius: 50%;
+}
+@media (max-width: 760px) {
+  .marina {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 48px 20px 8px;
+  }
+  .marina-photo {
+    max-width: 280px;
+    margin: 0 auto;
+    width: 100%;
+  }
+}
+
 .vantagens .titulo-secao {
   font-size: clamp(1.7rem, 3vw, 2.2rem);
   margin-bottom: 44px;

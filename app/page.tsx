@@ -171,6 +171,47 @@ export default function Landing() {
       </section>
 
       <main className="site-main">
+        {/* ===================== CONHEÇA A MARINA ===================== */}
+        <section className="marina reveal">
+          <div className="marina-photo">
+            <img
+              src="/marina.png"
+              alt="Marina, assistente virtual da Alpha 1 Consultoria"
+              loading="lazy"
+              onError={(e) => {
+                const img = e.currentTarget;
+                img.style.display = "none";
+                img.parentElement?.classList.add("no-img");
+              }}
+            />
+            <span className="marina-photo-fallback" aria-hidden="true">M</span>
+            <span className="marina-photo-badge">
+              <span className="dot" /> Online agora
+            </span>
+          </div>
+
+          <div className="marina-copy">
+            <p className="eyebrow">Quem é a {ASSISTENTE}</p>
+            <h2 className="titulo-secao">
+              Sua especialista virtual na <span>Alpha 1</span>
+            </h2>
+            <p className="marina-lead">
+              A {ASSISTENTE} é a assistente de inteligência artificial da Alpha 1 Consultoria. Ela conhece
+              os serviços de telecomunicações, gestão e TI da empresa e responde em português, de forma
+              clara e profissional — como uma colega de equipe que nunca tira folga.
+            </p>
+            <ul className="marina-list">
+              <li>Tira dúvidas sobre serviços, processos e atendimento</li>
+              <li>Pesquisa na web e cita as fontes</li>
+              <li>Gera planilhas (.xlsx) e documentos (.docx) na hora</li>
+              <li>Lê PDFs, Word e Excel que você anexar</li>
+            </ul>
+            <a className="btn-primary btn-lg" href="/chat">
+              Conversar com a {ASSISTENTE} <span className="btn-arrow">→</span>
+            </a>
+          </div>
+        </section>
+
         {/* ===================== VANTAGENS ===================== */}
         <section className="vantagens reveal">
           <p className="eyebrow">Por que a {ASSISTENTE}</p>
