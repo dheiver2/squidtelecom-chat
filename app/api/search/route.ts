@@ -5,6 +5,11 @@ export const dynamic = "force-dynamic";
 import { search, SafeSearchType } from "duck-duck-scrape";
 import { readSession } from "../../lib/auth";
 import type { SearchResult } from "../../lib/search";
+import { fetchAndExtract } from "../../lib/extract";
+
+// Quantas páginas abrir e LER de fato (além do snippet). Baixo para não
+// estourar a latência — a leitura é paralela, mas cada fetch tem custo.
+const READ_TOP_N = 4;
 
 export async function GET(req: Request) {
   // Apenas usuários autenticados podem buscar
@@ -28,6 +33,16 @@ export async function GET(req: Request) {
         url: r.url || "",
         description: r.description || "",
       }));
+
+    // Lê o conteúdo real das primeiras páginas (em paralelo). Falhas individuais
+    // não derrubam a busca — a fonte simplesmente fica só com o snippet.
+    await Promise.all(
+      results.slice(0, READ_TOP_N).map(async (r) => {
+        if (!r.url) return;
+        const content = await fetchAndExtract(r.url);
+        if (content) r.content = content;
+      })
+    );
 
     return Response.json({ results });
   } catch (e) {

@@ -122,12 +122,12 @@ export async function POST(req: Request) {
           ...trimmed,
         ],
         // ── Opções de velocidade para o Ollama ───────────────────────────
-        // num_ctx: janela de contexto menor = prefill mais rápido.
-        //   2048 cobre a maioria das conversas; aumente para 4096 se
-        //   precisar de contexto maior (a custo de TTFT).
+        // num_ctx: janela de contexto. 2048 cobre a conversa normal (prefill
+        //   rápido). Com fontes da web injetadas (conteúdo de páginas), o
+        //   contexto fica grande, então ampliamos para não truncar as fontes.
         // num_predict: -1 = sem limite de tokens gerados (padrão).
         options: {
-          num_ctx: 2048,
+          num_ctx: searchContext ? 8192 : 2048,
           num_predict: -1,
         },
       }),

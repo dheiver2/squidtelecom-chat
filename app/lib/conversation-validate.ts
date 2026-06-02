@@ -10,7 +10,7 @@ export const MAX_MODEL_LENGTH = 120;
 
 export interface CleanConversation {
   title: string;
-  messages: Array<{ role: string; content: string }>;
+  messages: Array<{ role: string; content: string; sources?: Array<{ title: string; url: string }> }>;
   model: string | null;
 }
 
@@ -42,7 +42,18 @@ export function validateConversationInput(
     if (content.length > MAX_MESSAGE_LENGTH) {
       throw new Error("Mensagem muito longa.");
     }
-    return { role, content };
+    // Preserva as fontes da web (citações), se válidas.
+    const rawSources = (m as { sources?: unknown }).sources;
+    const sources = Array.isArray(rawSources)
+      ? rawSources
+          .slice(0, 20)
+          .map((s) => ({
+            title: String((s as { title?: unknown })?.title ?? "").slice(0, 300),
+            url: String((s as { url?: unknown })?.url ?? "").slice(0, 2000),
+          }))
+          .filter((s) => s.url)
+      : undefined;
+    return sources && sources.length ? { role, content, sources } : { role, content };
   });
 
   const cleanModel =

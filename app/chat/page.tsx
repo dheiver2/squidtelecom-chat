@@ -10,9 +10,12 @@ import "katex/dist/katex.min.css";
 import { ENGINE_NAME } from "../lib/mangaba";
 
 type Role = "user" | "assistant";
+interface Source { title: string; url: string; }
 interface Message {
   role: Role;
   content: string;
+  /** Fontes da web usadas nesta resposta (quando a busca foi acionada). */
+  sources?: Source[];
 }
 interface Conversation {
   id: string;
@@ -238,6 +241,27 @@ const MessageContent = memo(function MessageContent({ content }: { content: stri
     </ReactMarkdown>
   );
 });
+
+// Bloco "Fontes" estilo big-tech: chips numerados clicáveis com o domínio.
+function Sources({ sources }: { sources: Source[] }) {
+  if (!sources.length) return null;
+  const domain = (u: string) => {
+    try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return u; }
+  };
+  return (
+    <div className="sources">
+      <div className="sources-label">Fontes</div>
+      <div className="sources-list">
+        {sources.map((s, i) => (
+          <a key={i} className="source-chip" href={s.url} target="_blank" rel="noreferrer noopener" title={s.title}>
+            <span className="source-num">{i + 1}</span>
+            <span className="source-domain">{domain(s.url)}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 type EngineStatus = "checking" | "online" | "offline";
 
@@ -685,9 +709,13 @@ export default function ChatPage() {
         throw new Error(msg);
       }
 
+      // Fontes (título + url) anexadas à resposta para exibir as citações.
+      const sources: Source[] = searchResults
+        .filter((r) => r.url)
+        .map((r) => ({ title: r.title || r.url, url: r.url }));
       updateConv(targetId, (c) => ({
         ...c,
-        messages: [...c.messages, { role: "assistant", content: "" }],
+        messages: [...c.messages, { role: "assistant", content: "", ...(sources.length ? { sources } : {}) }],
       }));
 
       // Buffer de tokens com flush via requestAnimationFrame: em vez de um
@@ -1452,6 +1480,7 @@ export default function ChatPage() {
                         ) : (
                           <>
                             <MessageContent content={m.content} />
+                            {m.sources && m.sources.length > 0 && <Sources sources={m.sources} />}
                             {loading && i === messages.length - 1 && (
                               <span className="stream-caret" aria-hidden="true" />
                             )}

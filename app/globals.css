@@ -680,6 +680,56 @@ body {
   color: var(--texto-suave, #6b7280);
 }
 
+/* Bloco de fontes (citações da web) */
+.sources {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--borda);
+}
+.sources-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--texto-suave, #6b7280);
+  margin-bottom: 8px;
+}
+.sources-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.source-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 6px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  text-decoration: none;
+  color: var(--texto, inherit);
+  background: var(--fundo-suave, rgba(127, 127, 127, 0.05));
+  transition: border-color 0.15s, background 0.15s;
+}
+.source-chip:hover {
+  border-color: var(--azul-vivo, #1f6feb);
+  background: rgba(31, 111, 235, 0.08);
+}
+.source-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--azul-vivo, #1f6feb);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.source-domain { color: var(--texto-suave, #6b7280); }
+
 /* GFM: listas de tarefas */
 .content li input[type="checkbox"] {
   margin-right: 8px;
