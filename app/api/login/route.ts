@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 import { verifyPassword, hashPasswordBcrypt, createSessionToken, sessionCookie } from "../../lib/auth";
 import { findUser, updatePasswordHash } from "../../lib/db";
 import { rateLimit, LIMITS, getIp, tooManyRequests } from "../../lib/ratelimit";
+import { isAllowedEmail, normalizeEmail, displayName } from "../../lib/allowlist";
 
 export async function POST(req: Request) {
   // Rate limiting: 5 tentativas / 15 min por IP
@@ -15,12 +16,20 @@ export async function POST(req: Request) {
   let password = "";
   try {
     const body = await req.json();
-    username = String(body.username || "").trim().toLowerCase();
+    // Login por e-mail (aceita `email` ou `username` por compatibilidade).
+    username = normalizeEmail(body.email ?? body.username ?? "");
     password = String(body.password || "");
   } catch { /* tratado abaixo */ }
 
   if (!username || !password) {
-    return Response.json({ error: "Usuário ou senha inválidos." }, { status: 401 });
+    return Response.json({ error: "E-mail ou senha inválidos." }, { status: 401 });
+  }
+  // Trava: somente e-mails autorizados (bloqueia até contas antigas fora da lista).
+  if (!isAllowedEmail(username)) {
+    return Response.json(
+      { error: "Este e-mail não está autorizado a acessar a plataforma." },
+      { status: 403 }
+    );
   }
 
   try {
@@ -41,7 +50,7 @@ export async function POST(req: Request) {
     }
 
     const token = createSessionToken(username);
-    return new Response(JSON.stringify({ user: username }), {
+    return new Response(JSON.stringify({ user: username, name: displayName(username) }), {
       status: 200,
       headers: { "Content-Type": "application/json", "Set-Cookie": sessionCookie(token) },
     });

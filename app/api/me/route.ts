@@ -2,6 +2,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { readSession } from "../../lib/auth";
+import { displayName } from "../../lib/allowlist";
 
 export async function GET(req: Request) {
   const user = readSession(req.headers.get("cookie"));
@@ -11,5 +12,5 @@ export async function GET(req: Request) {
       headers: { "Content-Type": "application/json" },
     });
   }
-  return Response.json({ user });
+  return Response.json({ user, name: displayName(user) });
 }

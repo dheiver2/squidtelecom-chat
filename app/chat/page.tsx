@@ -394,6 +394,7 @@ type EngineStatus = "checking" | "online" | "offline";
 
 export default function ChatPage() {
   const [user, setUser] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>(""); // nome de exibição do funcionário
   const [authChecking, setAuthChecking] = useState(true);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [usernameInput, setUsernameInput] = useState("");
@@ -509,7 +510,7 @@ export default function ChatPage() {
   useEffect(() => {
     fetch("/api/me", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : { user: null }))
-      .then((d) => setUser(d.user ?? null))
+      .then((d) => { setUser(d.user ?? null); setUserName(d.name || ""); })
       .catch(() => setUser(null))
       .finally(() => setAuthChecking(false));
   }, []);
@@ -747,6 +748,7 @@ export default function ChatPage() {
       const d = await res.json();
       setPasswordInput("");
       setUser(d.user);
+      setUserName(d.name || "");
     } catch {
       setLoginError("Falha de conexão. Tente novamente.");
     } finally {
@@ -765,6 +767,7 @@ export default function ChatPage() {
     setConversations([]);
     setCurrentId("");
     setUser(null);
+    setUserName("");
     setUsernameInput("");
     setPasswordInput("");
     setPassword2Input("");
@@ -804,6 +807,7 @@ export default function ChatPage() {
       setPasswordInput("");
       setPassword2Input("");
       setUser(d2.user);
+      setUserName(d2.name || "");
     } catch {
       setLoginError("Falha de conexão. Tente novamente.");
     } finally {
@@ -1217,15 +1221,16 @@ export default function ChatPage() {
           <h1>{authMode === "login" ? "Entrar" : "Criar conta"}</h1>
           <p>
             {authMode === "login"
-              ? "Entre com seu usuário e senha para usar a Marina Assistente."
-              : "Crie sua conta gratuita para usar a Marina Assistente."}
+              ? "Entre com seu e-mail e senha para usar a Marina Assistente."
+              : "Crie sua conta com seu e-mail corporativo para usar a Marina Assistente."}
           </p>
           <form onSubmit={authMode === "login" ? login : register}>
             <input
+              type="email"
               value={usernameInput}
               onChange={(e) => { setUsernameInput(e.target.value); setLoginError(""); }}
-              placeholder="Usuário"
-              autoComplete="username"
+              placeholder="E-mail"
+              autoComplete="email"
               autoFocus
             />
             <input
@@ -1280,7 +1285,9 @@ export default function ChatPage() {
 
   const waitingForFirstToken =
     loading && (messages.length === 0 || messages[messages.length - 1].role === "user");
-  const initial = user.trim().charAt(0).toUpperCase() || "U";
+  const displayLabel = userName || user;
+  const firstName = (userName || user).split(/[\s@.]/)[0];
+  const initial = displayLabel.trim().charAt(0).toUpperCase() || "U";
 
   const composer = (
     <div className="composer">
@@ -1502,8 +1509,8 @@ export default function ChatPage() {
           <div className="user-pill">
             <span className="ava">{initial}</span>
             <span className="txt">
-              {user}
-              <small>Conta local</small>
+              {displayLabel}
+              <small>{userName ? user : "Funcionário Alpha 1"}</small>
             </span>
             <button className="logout-btn" onClick={logout} aria-label="Sair">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -1604,7 +1611,7 @@ export default function ChatPage() {
         {messages.length === 0 ? (
           <div className="greeting">
             <img src="/logo-alpha1.png" alt="Alpha 1" />
-            <h1>Olá, {user.split(" ")[0]} 👋</h1>
+            <h1>Olá, {firstName} 👋</h1>
             <div className="composer-wrap">
               {composer}
               <div className="chips">

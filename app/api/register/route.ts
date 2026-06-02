@@ -4,8 +4,7 @@ export const dynamic = "force-dynamic";
 import { hashPasswordBcrypt } from "../../lib/auth";
 import { createUser, userExists } from "../../lib/db";
 import { rateLimit, LIMITS, getIp, tooManyRequests } from "../../lib/ratelimit";
-
-const USERNAME_RE = /^[a-z0-9_.-]{3,30}$/;
+import { isAllowedEmail, EMAIL_RE, normalizeEmail } from "../../lib/allowlist";
 
 export async function POST(req: Request) {
   // Rate limiting: 3 cadastros / hora por IP
@@ -13,19 +12,24 @@ export async function POST(req: Request) {
   const rl = await rateLimit(`register:${ip}`, LIMITS.register.limit, LIMITS.register.windowSecs);
   if (!rl.allowed) return tooManyRequests(rl.resetAt);
 
-  let username: string, password: string;
+  let email: string, password: string;
   try {
     const body = await req.json();
-    username = String(body.username || "").trim().toLowerCase();
+    // Login por e-mail. Aceita tanto `email` quanto `username` (compat).
+    email = normalizeEmail(body.email ?? body.username ?? "");
     password = String(body.password || "");
   } catch {
     return Response.json({ error: "Corpo da requisição inválido." }, { status: 400 });
   }
 
-  if (!USERNAME_RE.test(username)) {
+  if (!EMAIL_RE.test(email)) {
+    return Response.json({ error: "Informe um e-mail válido." }, { status: 422 });
+  }
+  // Trava: só e-mails na lista de funcionários autorizados podem se cadastrar.
+  if (!isAllowedEmail(email)) {
     return Response.json(
-      { error: "Usuário deve ter 3–30 caracteres (letras minúsculas, números, _ . -)." },
-      { status: 422 }
+      { error: "Este e-mail não está autorizado. Fale com o administrador da Alpha 1." },
+      { status: 403 }
     );
   }
   if (password.length < 6) {
@@ -33,11 +37,11 @@ export async function POST(req: Request) {
   }
 
   try {
-    if (await userExists(username)) {
-      return Response.json({ error: "Nome de usuário já está em uso." }, { status: 409 });
+    if (await userExists(email)) {
+      return Response.json({ error: "Este e-mail já tem conta. Faça login." }, { status: 409 });
     }
     const hash = await hashPasswordBcrypt(password);
-    await createUser(username, hash);
+    await createUser(email, hash);
     return Response.json({ ok: true }, { status: 201 });
   } catch (e) {
     console.error("register error", e);
