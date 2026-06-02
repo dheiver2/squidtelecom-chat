@@ -1026,15 +1026,6 @@ export default function ChatPage() {
     setRenamingId(null);
   }
 
-  function changeConversationModel(modelId: string) {
-    setConversations((prev) => prev.map((c) => {
-      if (c.id !== currentId) return c;
-      const updated = { ...c, model: modelId };
-      syncConversationToServer(updated);
-      return updated;
-    }));
-  }
-
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -1490,7 +1481,6 @@ export default function ChatPage() {
                     <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span className="title">{c.title || "Nova conversa"}</span>
-                  {c.model && <span className="conv-model-badge">{availableModels.find(m => m.id === c.model)?.label?.split(" ").pop() || c.model.split(":")[0]}</span>}
                   <span
                     className="rename"
                     onClick={(e) => {
@@ -1547,23 +1537,8 @@ export default function ChatPage() {
           </button>
           <div className="model">
             <span className="brand-name">Marina Assistente</span>
-            {availableModels.length > 1 ? (
-              <select
-                className="model-select"
-                value={current?.model || globalModel}
-                onChange={(e) => {
-                  setGlobalModel(e.target.value);
-                  changeConversationModel(e.target.value);
-                }}
-                title="Selecionar modelo"
-              >
-                {availableModels.map((m) => (
-                  <option key={m.id} value={m.id}>{m.label}</option>
-                ))}
-              </select>
-            ) : (
-              <small>{status === "online" ? modelLabel : "offline"}</small>
-            )}
+            {/* Seletor de modelo oculto: o usuário não troca de modelo. */}
+            <small>{status === "online" ? modelLabel : "offline"}</small>
           </div>
           <div className={`conn ${status}`} title={`Status do ${ENGINE_NAME}`}>
             <span className="dot" />
