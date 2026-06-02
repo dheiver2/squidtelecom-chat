@@ -2,22 +2,12 @@
 // Camada de abstração "Mangaba AI"
 // ------------------------------------------------------------
 // Todo o app fala apenas em "Mangaba AI" e modelos "Mangaba".
-// O motor é o Mangaba (framework brasileiro de orquestração
-// multi-agente), que roda local com o MESMO fluxo do Ollama
-// (API OpenAI-compatible em http://localhost:11434).
+// O motor real é servido por um endpoint compatível com OpenAI
+// (hoje: Hugging Face), configurado via OPENAI_BASE_URL/OPENAI_MODEL.
 // ============================================================
 
 /** Nome de marca do motor de IA exibido ao usuário. */
 export const ENGINE_NAME = "Mangaba AI";
-
-// Endpoints do motor local, em ordem de preferência (detalhe de implementação).
-// HTTPS primeiro: o Safari só aceita https://localhost (mixed content bloqueia
-// http://localhost a partir de uma página HTTPS). Chrome/Edge aceitam ambos, então
-// o http fica como fallback para instalações antigas que ainda não têm certificado.
-export const ENGINE_BASE_URLS = [
-  "https://localhost:11434",
-  "http://localhost:11434",
-] as const;
 
 /** Modelo "oficial" da plataforma servido pelo Mangaba. */
 export const PRIMARY_MODEL_ID = "mangaba-pro";

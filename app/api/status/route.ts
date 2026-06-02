@@ -12,11 +12,10 @@ export async function GET(req: Request) {
     });
   }
 
-  // Base do serviço de IA (ex.: Ollama na VPS atrás de proxy HTTPS + Bearer).
-  // Usamos o endpoint OpenAI-compatible /v1/models com a mesma chave do /api/chat,
-  // para passar pela autenticação do proxy (o /api/tags nativo ficaria 401).
-  const baseV1 = (process.env.OPENAI_BASE_URL || "http://localhost:11434/v1").replace(/\/$/, "");
-  const apiKey = process.env.OPENAI_API_KEY || "mangaba";
+  // Base do serviço de IA (endpoint compatível com OpenAI — ex.: Hugging Face).
+  // Consultamos /v1/models com a mesma chave do /api/chat.
+  const baseV1 = (process.env.OPENAI_BASE_URL || "https://router.huggingface.co/v1").replace(/\/$/, "");
+  const apiKey = process.env.OPENAI_API_KEY || "";
   const configured = process.env.OPENAI_MODEL;
 
   try {

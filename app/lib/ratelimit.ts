@@ -100,7 +100,7 @@ export const LIMITS = {
 } as const;
 
 export function getIp(req: Request): string {
-  // Em Vercel/Caddy o IP real do cliente é injetado pela plataforma em
+  // Na Vercel o IP real do cliente é injetado pela plataforma em
   // headers confiáveis (`x-vercel-forwarded-for` / `x-real-ip`). NÃO usamos o
   // primeiro valor de `x-forwarded-for`: ele é o elemento mais à esquerda da
   // cadeia e é controlável pelo cliente, permitindo burlar o rate limit (ex.:

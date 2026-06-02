@@ -116,57 +116,73 @@ export async function POST(req: Request) {
     ? formatSearchContext(searchQuery, searchResults)
     : "";
 
-  const baseUrl = (process.env.OPENAI_BASE_URL || "http://localhost:11434/v1").replace(/\/$/, "");
-  const model = requestedModel || process.env.OPENAI_MODEL || "mangaba-pro";
+  // ── Provedores (compatíveis com OpenAI, ex.: Hugging Face) ───────────
+  // Failover automático: primário + reserva opcional. Se o primário falhar
+  // (conexão, timeout ou status != 2xx), tentamos o próximo antes de desistir.
+  const payloadMessages = [
+    {
+      role: "system",
+      content: searchContext ? `${SYSTEM_PROMPT}\n\n${searchContext}` : SYSTEM_PROMPT,
+    },
+    ...trimmed,
+  ];
 
-  let upstream: Response;
-  try {
-    upstream = await fetch(`${baseUrl}/chat/completions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        stream: true,
-        messages: [
-          {
-            role: "system",
-            content: searchContext
-              ? `${SYSTEM_PROMPT}\n\n${searchContext}`
-              : SYSTEM_PROMPT,
-          },
-          ...trimmed,
-        ],
-        // ── Opções de velocidade para o Ollama ───────────────────────────
-        // num_ctx: janela de contexto. 2048 cobre a conversa normal (prefill
-        //   rápido). Com fontes da web injetadas (conteúdo de páginas), o
-        //   contexto fica grande, então ampliamos para não truncar as fontes.
-        // num_predict: -1 = sem limite de tokens gerados (padrão).
-        options: {
-          num_ctx: searchContext ? 8192 : 2048,
-          num_predict: -1,
-        },
-      }),
+  type Provider = { baseUrl: string; model: string; apiKey: string };
+  const primaryModel = requestedModel || process.env.OPENAI_MODEL || "";
+  const providers: Provider[] = [
+    {
+      baseUrl: (process.env.OPENAI_BASE_URL || "https://router.huggingface.co/v1").replace(/\/$/, ""),
+      model: primaryModel,
+      apiKey,
+    },
+  ];
+  // Reserva: outro endpoint/modelo (ex.: outro modelo no HF, Groq ou OpenAI).
+  if (process.env.OPENAI_BASE_URL_FALLBACK) {
+    providers.push({
+      baseUrl: process.env.OPENAI_BASE_URL_FALLBACK.replace(/\/$/, ""),
+      model: process.env.OPENAI_MODEL_FALLBACK || primaryModel,
+      apiKey: process.env.OPENAI_API_KEY_FALLBACK || apiKey,
     });
-  } catch {
+  }
+
+  // Timeout só para a CONEXÃO/headers — não corta o streaming já iniciado.
+  const CONNECT_TIMEOUT_MS = 20_000;
+  async function openUpstream(p: Provider): Promise<Response | null> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), CONNECT_TIMEOUT_MS);
+    try {
+      const res = await fetch(`${p.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${p.apiKey}` },
+        body: JSON.stringify({ model: p.model, stream: true, messages: payloadMessages }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (!res.ok || !res.body) {
+        await res.text().catch(() => ""); // drena corpo de erro
+        return null;
+      }
+      return res;
+    } catch {
+      clearTimeout(timer);
+      return null;
+    }
+  }
+
+  let upstream: Response | null = null;
+  for (const p of providers) {
+    upstream = await openUpstream(p);
+    if (upstream) break;
+  }
+  if (!upstream) {
     return new Response(
       JSON.stringify({ error: "Não foi possível conectar ao serviço de IA." }),
       { status: 502, headers: { "Content-Type": "application/json" } }
     );
   }
 
-  if (!upstream.ok || !upstream.body) {
-    const detail = await upstream.text().catch(() => "");
-    return new Response(
-      JSON.stringify({ error: `Erro do provedor de IA (${upstream.status}).`, detail }),
-      { status: 502, headers: { "Content-Type": "application/json" } }
-    );
-  }
-
   // ── Stream de tokens para o browser ──────────────────────────────────
-  // Parseia SSE do Ollama e re-emite apenas o texto dos tokens,
+  // Parseia o SSE do provedor e re-emite apenas o texto dos tokens,
   // sem overhead de JSON por parte do browser.
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();

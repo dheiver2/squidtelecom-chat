@@ -1,6 +1,7 @@
 // ============================================================
 // Planejador de buscas (etapa 2). Dada a pergunta do usuário, pede ao modelo
-// (Mangaba/Ollama local) de 1 a 3 sub-queries específicas. Como o modelo é
+// (provedor compatível com OpenAI — ex.: Hugging Face) de 1 a 3 sub-queries
+// específicas. Como o modelo é
 // pequeno e pode devolver JSON imperfeito, a extração é tolerante e SEMPRE há
 // fallback para a pergunta original — a busca nunca quebra por causa do plano.
 // ============================================================
@@ -54,9 +55,9 @@ function dedupe(qs: string[]): string[] {
 export async function planQueries(question: string): Promise<string[]> {
   const fallback = [clean(question).slice(0, 120) || question.slice(0, 120)];
 
-  const baseUrl = (process.env.OPENAI_BASE_URL || "http://localhost:11434/v1").replace(/\/$/, "");
-  const model = process.env.OPENAI_MODEL || "mangaba-pro";
-  const apiKey = process.env.OPENAI_API_KEY || "mangaba";
+  const baseUrl = (process.env.OPENAI_BASE_URL || "https://router.huggingface.co/v1").replace(/\/$/, "");
+  const model = process.env.OPENAI_MODEL || "";
+  const apiKey = process.env.OPENAI_API_KEY || "";
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PLAN_TIMEOUT_MS);
@@ -73,7 +74,7 @@ export async function planQueries(question: string): Promise<string[]> {
           { role: "system", content: PLANNER_SYSTEM },
           { role: "user", content: question.slice(0, 1000) },
         ],
-        options: { num_ctx: 2048, num_predict: 256 },
+        max_tokens: 256,
       }),
     });
     if (!res.ok) return fallback;

@@ -556,7 +556,7 @@ export default function ChatPage() {
   }, [user]);
 
   // Verifica a conexão com o serviço de IA via rota server-side (/api/status),
-  // que fala com o Ollama na VPS (atrás de proxy HTTPS + chave). A chave nunca
+  // que fala com o provedor compatível com OpenAI (Hugging Face). A chave nunca
   // chega ao navegador — fica só nas variáveis de ambiente do servidor.
   async function checkEngine() {
     setStatus("checking");
