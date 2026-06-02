@@ -630,6 +630,56 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* Cartão de planilha (alpha1-sheet) */
+.sheet-card {
+  margin: 14px 0;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--fundo-suave, rgba(127, 127, 127, 0.05));
+}
+.sheet-card.pending {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--texto-suave, #6b7280);
+  font-size: 0.9rem;
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.sheet-head .sheet-title {
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-dl {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: none;
+  background: var(--azul-vivo, #1f6feb);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sheet-dl:disabled { opacity: 0.6; cursor: default; }
+.sheet-card .table-wrap { margin: 0; }
+.sheet-more {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--texto-suave, #6b7280);
+}
+
 /* GFM: listas de tarefas */
 .content li input[type="checkbox"] {
   margin-right: 8px;
