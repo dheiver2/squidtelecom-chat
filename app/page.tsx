@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ENGINE_NAME } from "./lib/mangaba";
 
 const SITE = "http://alpha1consultoria.com";
 const WHATSAPP = "https://wa.me/5582999825657";
 const INSTAGRAM = "https://www.instagram.com/alpha1consultoria_/";
 const LINKEDIN = "https://www.linkedin.com/company/alpha1consultoria/posts/?feedView=all";
+
+// Persona do assistente apresentado na landing.
+const ASSISTENTE = "Marina";
+const ASSISTENTE_FULL = "Marina Assistente";
 
 export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -86,22 +89,22 @@ export default function Landing() {
           <div className="hero-copy">
             <span className="hero-badge">
               <span className="hero-badge-dot" />
-              {ENGINE_NAME} · IA corporativa da Alpha 1
+              {ASSISTENTE} · Assistente de IA da Alpha 1
             </span>
 
             <h1 className="hero-title">
-              O assistente de IA <span className="hero-highlight">corporativo</span> da Alpha 1
+              Conheça a <span className="hero-highlight">{ASSISTENTE}</span>, a assistente de IA da Alpha 1
             </h1>
 
             <p className="hero-lead">
-              Inteligência artificial personalizada, treinada para o universo de telecomunicações,
-              gestão e tecnologia da informação da Alpha 1. Privada, especializada e sempre
-              disponível para a sua equipe e os seus clientes.
+              A {ASSISTENTE} é a inteligência artificial da Alpha 1 Consultoria: treinada no universo de
+              telecomunicações, gestão e tecnologia da informação da empresa. Ela atende a sua equipe e
+              os seus clientes em linguagem natural — privada, especializada e disponível 24 horas.
             </p>
 
             <div className="hero-cta">
               <a className="btn-primary btn-lg" href="/chat">
-                Entrar na plataforma
+                Conversar com a {ASSISTENTE}
                 <span className="btn-arrow">→</span>
               </a>
               <a className="btn-ghost btn-lg" href={WHATSAPP} target="_blank" rel="noreferrer">
@@ -134,14 +137,14 @@ export default function Landing() {
                 <span className="chat-mock-dots">
                   <i /><i /><i />
                 </span>
-                <span className="chat-mock-title">{ENGINE_NAME}</span>
+                <span className="chat-mock-title">{ASSISTENTE_FULL}</span>
                 <span className="chat-mock-online">
                   <span className="dot" /> Online
                 </span>
               </div>
               <div className="chat-mock-body">
                 <div className="mock-bubble mock-bot">
-                  Olá! Sou o {ENGINE_NAME}, assistente da Alpha 1. Como posso ajudar hoje?
+                  Oi! Sou a {ASSISTENTE}, assistente da Alpha 1. Como posso ajudar você hoje?
                 </div>
                 <div className="mock-bubble mock-user">
                   Quais serviços de telecom a Alpha 1 oferece?
@@ -170,9 +173,9 @@ export default function Landing() {
       <main className="site-main">
         {/* ===================== VANTAGENS ===================== */}
         <section className="vantagens reveal">
-          <p className="eyebrow">Por que a Alpha 1</p>
+          <p className="eyebrow">Por que a {ASSISTENTE}</p>
           <h2 className="titulo-secao">
-            Uma IA <span>feita sob medida</span> para a sua operação
+            Uma assistente <span>feita sob medida</span> para a Alpha 1
           </h2>
 
           <div className="vantagens-lista">
@@ -209,8 +212,8 @@ export default function Landing() {
                   />
                 </svg>
               </div>
-              <h3>Personalizado</h3>
-              <p>Treinado com o conhecimento, os serviços e a linguagem da Alpha 1 Consultoria.</p>
+              <h3>Personalizada</h3>
+              <p>A {ASSISTENTE} é treinada com o conhecimento, os serviços e a linguagem da Alpha 1 Consultoria.</p>
             </div>
 
             <div className="vantagem-item">
@@ -227,7 +230,7 @@ export default function Landing() {
                 </svg>
               </div>
               <h3>Disponível 24h</h3>
-              <p>Respostas rápidas e especializadas para a sua equipe e os seus clientes, a qualquer hora.</p>
+              <p>A {ASSISTENTE} responde sua equipe e seus clientes com rapidez e especialização, a qualquer hora.</p>
             </div>
           </div>
         </section>
@@ -252,10 +255,10 @@ export default function Landing() {
             <div className="passo">
               <div className="passo-num">2</div>
               <div className="passo-body">
-                <h3>Faça a sua pergunta</h3>
+                <h3>Pergunte à {ASSISTENTE}</h3>
                 <p>
-                  Pergunte sobre serviços, processos e atendimento da Alpha 1 em linguagem natural — o{" "}
-                  {ENGINE_NAME} entende o contexto do seu negócio.
+                  Fale sobre serviços, processos e atendimento da Alpha 1 em linguagem natural — a{" "}
+                  {ASSISTENTE} entende o contexto do seu negócio e ainda gera planilhas e documentos.
                 </p>
               </div>
             </div>
@@ -276,10 +279,10 @@ export default function Landing() {
             <span className="orb orb-3" />
           </div>
           <div className="cta-band-inner">
-            <h2>Pronto para conversar com a IA da Alpha 1?</h2>
-            <p>Atendimento inteligente da Alpha 1, sempre que você precisar.</p>
+            <h2>Pronto para conversar com a {ASSISTENTE}?</h2>
+            <p>A assistente de IA da Alpha 1, sempre que você precisar.</p>
             <a className="btn-light btn-lg" href="/chat">
-              Entrar na plataforma <span className="btn-arrow">→</span>
+              Conversar com a {ASSISTENTE} <span className="btn-arrow">→</span>
             </a>
           </div>
         </section>
@@ -324,7 +327,7 @@ export default function Landing() {
               </svg>
             </a>
           </div>
-          <p className="footer-copy">© 2026 Alpha 1 Consultoria. {ENGINE_NAME} — assistente de IA corporativo.</p>
+          <p className="footer-copy">© 2026 Alpha 1 Consultoria. {ASSISTENTE_FULL} — assistente de IA corporativa.</p>
         </div>
       </footer>
     </div>
