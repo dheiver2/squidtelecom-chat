@@ -25,8 +25,6 @@ interface Conversation {
   model?: string; // modelo específico desta conversa
 }
 
-interface ModelOption { id: string; label: string; }
-
 const SUGGESTIONS = [
   "Quais serviços a Alpha 1 oferece?",
   "O que é internet com velocidade simétrica?",
@@ -439,8 +437,7 @@ export default function ChatPage() {
   const [fileLoading, setFileLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [webSearch, setWebSearch] = useState(false);
-  // Multi-modelo
-  const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
+  // Modelo padrão (interno, não exposto ao usuário).
   const [globalModel, setGlobalModel] = useState<string>("");
   // Sync de conversas — um timer de debounce POR conversa (evita que edições
   // rápidas em conversas diferentes cancelem o sync umas das outras).
@@ -569,11 +566,8 @@ export default function ChatPage() {
         const data = await res.json();
         if (data.online) {
           if (data.model) setModelLabel(data.model);
-          if (data.models?.length) {
-            setAvailableModels(data.models);
-            // Define o modelo global padrão só na primeira vez
-            setGlobalModel(prev => prev || data.defaultModelId || data.models[0]?.id || "");
-          }
+          // Modelo padrão (não exposto ao usuário — sem troca de modelo).
+          setGlobalModel((prev) => prev || data.defaultModelId || data.models?.[0]?.id || "");
           setStatus("online");
           return;
         }
