@@ -1,6 +1,21 @@
+// Identificador único do build — usado para auto-atualização do cliente.
+// Prioriza o SHA do commit (Vercel) e cai para git local / timestamp.
+function resolveBuildId() {
+  if (process.env.VERCEL_GIT_COMMIT_SHA) return process.env.VERCEL_GIT_COMMIT_SHA.slice(0, 12);
+  try {
+    return require("child_process").execSync("git rev-parse --short HEAD").toString().trim();
+  } catch {
+    return String(Date.now());
+  }
+}
+const BUILD_ID = resolveBuildId();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Expõe o build ao cliente e amarra os assets a esse id.
+  env: { NEXT_PUBLIC_BUILD: BUILD_ID },
+  generateBuildId: async () => BUILD_ID,
   async headers() {
     return [
       {

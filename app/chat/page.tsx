@@ -8,6 +8,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { ENGINE_NAME } from "../lib/mangaba";
+import { APP_BUILD } from "../lib/build";
 
 type Role = "user" | "assistant";
 interface Source { title: string; url: string; }
@@ -428,6 +429,8 @@ export default function ChatPage() {
   const [showScrollDown, setShowScrollDown] = useState(false);
   // Aviso de falha de sincronização com o servidor (some sozinho).
   const [syncWarning, setSyncWarning] = useState(false);
+  // Nova versão publicada detectada → recarrega quando ocioso (ou via aviso).
+  const [updateReady, setUpdateReady] = useState(false);
 
   // Tema escuro
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -461,6 +464,34 @@ export default function ChatPage() {
     const t = setTimeout(() => setSyncWarning(false), 6000);
     return () => clearTimeout(t);
   }, [syncWarning]);
+
+  // Auto-atualização: detecta quando há um build novo publicado comparando o
+  // build do servidor (/api/version) com o build embutido neste bundle.
+  useEffect(() => {
+    let stop = false;
+    async function check() {
+      try {
+        const res = await fetch("/api/version", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!stop && data.build && data.build !== APP_BUILD) setUpdateReady(true);
+      } catch { /* offline — ignora */ }
+    }
+    check();
+    const onVisible = () => { if (!document.hidden) check(); };
+    document.addEventListener("visibilitychange", onVisible);
+    const t = setInterval(check, 5 * 60 * 1000); // a cada 5 min
+    return () => { stop = true; clearInterval(t); document.removeEventListener("visibilitychange", onVisible); };
+  }, []);
+
+  // Quando há versão nova E o usuário está ocioso (sem gerar, sem texto
+  // digitado), recarrega sozinho — limpa o bundle antigo sem atrapalhar.
+  useEffect(() => {
+    if (updateReady && !loading && !input.trim()) {
+      const t = setTimeout(() => window.location.reload(), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [updateReady, loading, input]);
 
   function toggleTheme() {
     const next = theme === "light" ? "dark" : "light";
@@ -1577,6 +1608,16 @@ export default function ChatPage() {
           <div className="engine-banner" role="status">
             <strong>Não foi possível salvar no servidor.</strong> Sua conversa está
             guardada neste dispositivo e tentaremos sincronizar novamente.
+          </div>
+        )}
+
+        {updateReady && (
+          <div className="engine-banner" role="status">
+            <strong>Nova versão disponível.</strong> Será atualizada automaticamente
+            quando você terminar.
+            <span className="engine-retry">
+              <button onClick={() => window.location.reload()}>Atualizar agora</button>
+            </span>
           </div>
         )}
 
