@@ -8,6 +8,13 @@ export const metadata: Metadata = {
   icons: { icon: "/logo-alpha1.png" },
 };
 
+// HTML sempre dinâmico → não é cacheado como estático (sem s-maxage de 1 ano).
+// Combinado com o Cache-Control "no-cache" do next.config, garante que cada
+// deploy seja servido fresco, puxando os assets hasheados novos. Os assets em
+// /_next/static seguem imutáveis (cache longo, seguro). Resolve o cache em todo
+// deploy sem hard reload manual.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">

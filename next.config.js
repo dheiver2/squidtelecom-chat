@@ -35,6 +35,23 @@ const nextConfig = {
           },
         ],
       },
+      // Assets hasheados do Next (nome muda a cada build) → cache longo e imutável.
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      // Todo o resto (HTML/documentos e rotas) → nunca cachear: o navegador
+      // sempre revalida e, num deploy novo, baixa o HTML novo (que referencia
+      // os assets hasheados novos). Isso resolve o cache automaticamente em
+      // cada deploy, sem hard reload manual.
+      {
+        source: "/((?!_next/static|_next/image).*)",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+        ],
+      },
     ];
   },
 };
