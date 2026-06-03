@@ -5,8 +5,11 @@ export const dynamic = "force-dynamic";
 import { search, SafeSearchType } from "duck-duck-scrape";
 import { readSession } from "../../lib/auth";
 import type { SearchResult } from "../../lib/search";
-import { fetchAndExtract } from "../../lib/extract";
+import { fetchAndExtract, selectRelevant } from "../../lib/extract";
 import { planQueries } from "../../lib/search-plan";
+
+// Chars de conteúdo relevante enviados ao modelo por fonte (após o rerank).
+const RELEVANT_CHARS = 900;
 
 // Quantas páginas abrir e LER de fato (além do snippet). Baixo para não
 // estourar a latência — a leitura é paralela, mas cada fetch tem custo.
@@ -75,7 +78,9 @@ export async function GET(req: Request) {
     await Promise.all(
       merged.slice(0, READ_TOP_N).map(async (r) => {
         const content = await fetchAndExtract(r.url);
-        if (content) r.content = content;
+        // Rerank: envia ao modelo só os trechos relevantes à pergunta (economia
+        // de tokens) em vez da página inteira.
+        if (content) r.content = selectRelevant(content, q, RELEVANT_CHARS);
       })
     );
 
