@@ -123,10 +123,19 @@ export default function ManualPage() {
       <section>
         <h2>10. Limitações</h2>
         <ul>
-          <li>A Marina pode errar — confira informações importantes antes de usar.</li>
-          <li>Não acessa sistemas internos (ERP, base de clientes) nem envia e-mails sozinha.</li>
-          <li>Cotação de passagem/material com preço real não é confiável só por busca na web.</li>
-          <li>Não entende imagens nem áudio.</li>
+          <li><strong>Pode cometer erros</strong> (inclusive parecer segura ao errar) — confira informações importantes antes de usar.</li>
+          <li><strong>Não acessa sistemas internos</strong> (ERP, base de clientes, e-mail, agenda) — não há integração.</li>
+          <li><strong>Não executa ações</strong>: não envia e-mails, não agenda, não acessa links/contas em seu nome.</li>
+          <li><strong>Não entende imagens nem áudio</strong> — só texto e arquivos lidos como texto.</li>
+          <li><strong>Conhecimento da Alpha 1 é limitado ao que foi configurado</strong> — não há base interna de documentos (sem RAG); pode não saber detalhes específicos da empresa.</li>
+          <li><strong>Cotação com preço real</strong> (passagens, materiais) só por busca na web <strong>não é confiável</strong> — confirme sempre na fonte oficial.</li>
+          <li><strong>Sem memória entre conversas</strong>: cada conversa é isolada; ela só “lembra” do histórico da conversa atual.</li>
+          <li><strong>Conversas muito longas</strong> perdem as mensagens mais antigas (janela de contexto limitada).</li>
+          <li><strong>Leitura de arquivos tem limites</strong>: PDF até ~30 páginas; planilhas até ~200 linhas por aba; arquivos grandes são cortados.</li>
+          <li><strong>Busca na web é parcial</strong>: lê algumas páginas (não a internet toda) e os resultados podem estar desatualizados.</li>
+          <li><strong>Respostas têm tamanho máximo</strong> — textos muito longos podem ser cortados (peça “continue” para seguir).</li>
+          <li><strong>Pode ficar mais lenta</strong> em horários de pico ou se o provedor de IA oscilar.</li>
+          <li><strong>Conteúdo sensível</strong>: evite enviar dados pessoais/sigilosos desnecessários; a Marina é uma ferramenta de apoio, não substitui o julgamento humano.</li>
         </ul>
         <p><strong>Em caso de problema de acesso, fale com o administrador da Alpha 1.</strong></p>
       </section>
