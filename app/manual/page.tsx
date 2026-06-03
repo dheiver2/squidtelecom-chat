@@ -48,7 +48,7 @@ export default function ManualPage() {
       <section>
         <h2>2. Como acessar</h2>
         <ol>
-          <li>Abra a plataforma: <strong>https://apha1-ia.online</strong></li>
+          <li>Abra a plataforma: <strong>https://alpha1-ia.online</strong></li>
           <li>Clique em <strong>Entrar</strong> e informe seu <strong>e-mail</strong> e a <strong>senha</strong> que recebeu.</li>
           <li>A senha diferencia maiúsculas de minúsculas — digite exatamente como recebeu.</li>
           <li>Para sair, clique no botão de logout ao lado do seu nome (canto inferior esquerdo).</li>
