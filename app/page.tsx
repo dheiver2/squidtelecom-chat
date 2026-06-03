@@ -319,6 +319,53 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* ===================== TELAS / EM AÇÃO ===================== */}
+        <section className="screens reveal">
+          <p className="eyebrow">Veja a Marina em ação</p>
+          <h2 className="titulo-secao">
+            Do pedido à <span>entrega pronta</span>
+          </h2>
+
+          <div className="browser-frame">
+            <div className="browser-bar">
+              <span className="bdot r" /><span className="bdot y" /><span className="bdot g" />
+              <span className="burl">alpha1-ia.online/chat</span>
+            </div>
+            <div className="browser-body">
+              <div className="sc-row sc-user"><div className="sc-bubble">Monte uma planilha de custos do projeto com 3 itens e total.</div></div>
+              <div className="sc-row sc-bot">
+                <span className="sc-ava">M</span>
+                <div className="sc-content">
+                  <p>Claro! Segue a planilha de custos com os itens e o total calculado:</p>
+                  <div className="sc-card">
+                    <div className="sc-card-head">
+                      <span className="sc-card-ico">▦</span>
+                      <span className="sc-card-title">Custos do Projeto</span>
+                      <span className="sc-card-btn">Baixar .xlsx</span>
+                    </div>
+                    <table className="sc-table">
+                      <thead><tr><th>Item</th><th>Qtd</th><th>Valor Unit</th><th>Total</th></tr></thead>
+                      <tbody>
+                        <tr><td>Notebook</td><td>2</td><td>R$ 3.500</td><td>R$ 7.000</td></tr>
+                        <tr><td>Switch 24p</td><td>1</td><td>R$ 1.200</td><td>R$ 1.200</td></tr>
+                        <tr><td>Licença SW</td><td>5</td><td>R$ 200</td><td>R$ 1.000</td></tr>
+                        <tr className="sc-total"><td>TOTAL</td><td></td><td></td><td>R$ 9.200</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="screens-feats">
+            <span>📊 Planilhas .xlsx</span>
+            <span>📄 Documentos .docx</span>
+            <span>🔎 Busca com fontes</span>
+            <span>📎 Lê PDF, Word e Excel</span>
+          </div>
+        </section>
+
         {/* ===================== CTA BAND ===================== */}
         <section className="cta-band reveal">
           <div className="cta-band-decor" aria-hidden="true">

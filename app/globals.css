@@ -2114,6 +2114,93 @@ body {
 .vantagens {
   padding: 84px 0 56px;
 }
+/* ===================== TELAS / EM AÇÃO ===================== */
+.screens {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 64px 22px 24px;
+  text-align: center;
+}
+.browser-frame {
+  margin: 28px auto 0;
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(37, 70, 121, 0.18);
+  background: var(--branco, #fff);
+  text-align: left;
+}
+.browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  background: var(--azul-claro);
+  border-bottom: 1px solid var(--borda);
+}
+.bdot { width: 11px; height: 11px; border-radius: 50%; }
+.bdot.r { background: #ff5f57; } .bdot.y { background: #febc2e; } .bdot.g { background: #28c840; }
+.burl {
+  margin-left: 10px;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  background: var(--branco, #fff);
+  border: 1px solid var(--borda);
+  border-radius: 20px;
+  padding: 3px 14px;
+}
+.browser-body { padding: 22px; background: var(--branco, #fff); }
+.sc-row { display: flex; margin: 12px 0; }
+.sc-user { justify-content: flex-end; }
+.sc-user .sc-bubble {
+  background: var(--azul-vivo);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 14px 14px 4px 14px;
+  max-width: 78%;
+  font-size: 0.92rem;
+}
+.sc-bot { gap: 10px; align-items: flex-start; }
+.sc-ava {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--azul-escuro);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.85rem;
+}
+.sc-content { flex: 1; min-width: 0; }
+.sc-content > p { margin: 4px 0 10px; font-size: 0.92rem; color: var(--texto); }
+.sc-card { border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; }
+.sc-card-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+  background: var(--azul-claro);
+  border-bottom: 1px solid var(--borda);
+}
+.sc-card-ico { color: var(--azul-vivo); font-size: 1.1rem; }
+.sc-card-title { font-weight: 600; font-size: 0.9rem; flex: 1; }
+.sc-card-btn {
+  background: var(--azul-vivo); color: #fff;
+  font-size: 0.78rem; font-weight: 600;
+  padding: 5px 12px; border-radius: 8px;
+}
+.sc-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.sc-table th { background: #f6f8fc; text-align: left; padding: 8px 12px; color: var(--texto-suave); font-weight: 600; }
+.sc-table td { padding: 8px 12px; border-top: 1px solid var(--borda); }
+.sc-table .sc-total td { font-weight: 700; color: var(--azul-escuro); }
+.screens-feats {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+  margin-top: 26px;
+}
+.screens-feats span {
+  background: var(--azul-claro);
+  color: var(--azul-escuro);
+  font-size: 0.85rem; font-weight: 600;
+  padding: 7px 14px; border-radius: 999px;
+}
+
 /* ===================== CONHEÇA A MARINA ===================== */
 .marina {
   max-width: 1100px;
