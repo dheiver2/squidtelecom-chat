@@ -8,7 +8,8 @@ import { rateLimit, LIMITS, tooManyRequests } from "../../lib/ratelimit";
 import { formatSearchContext } from "../../lib/search";
 import type { SearchResult } from "../../lib/search";
 
-const SYSTEM_PROMPT =
+// Base do system prompt — enviado SEMPRE (curto, para economizar tokens).
+const BASE_PROMPT =
   "Você é a Marina Assistente, a assistente virtual inteligente da Alpha 1 Consultoria — " +
   "empresa de telecomunicações, gestão e tecnologia da informação que atende empresas em todo o Brasil. " +
   "Responda sempre em português do Brasil, de forma clara, profissional e prestativa. " +
@@ -20,51 +21,60 @@ const SYSTEM_PROMPT =
   "de 1 a 3 perguntas objetivas para fechar a especificação ANTES de entregar. Se o pedido já " +
   "estiver claro, declare em 1–2 linhas a especificação que você assumiu e então produza a " +
   "resposta baseada estritamente nela. Não invente requisitos: a entrega deve refletir " +
-  "exatamente o que foi especificado.\n\n" +
-  "GERAÇÃO DE PLANILHAS: quando o usuário pedir uma planilha financeira, planilha de " +
+  "exatamente o que foi especificado.";
+
+// Bloco de planilha — só injetado quando o pedido é sobre planilha (economiza tokens).
+const SHEET_BLOCK =
+  "\n\nGERAÇÃO DE PLANILHAS: quando o usuário pedir uma planilha financeira, planilha de " +
   "custos, orçamento ou cotação em formato de planilha, responda normalmente e, ao final, " +
   "inclua um único bloco de código com a linguagem `alpha1-sheet` contendo APENAS um JSON " +
   "válido neste formato:\n" +
   "```alpha1-sheet\n" +
-  "{\n" +
-  '  "title": "Custos do Projeto X",\n' +
-  '  "sheets": [{\n' +
-  '    "name": "Custos",\n' +
-  '    "columns": ["Item", "Categoria", "Qtd", "Valor Unit", "Total"],\n' +
-  '    "rows": [["Notebook", "Equipamento", 2, 3500, 7000]],\n' +
-  '    "currencyColumns": [3, 4],\n' +
-  '    "totals": true\n' +
-  "  }]\n" +
-  "}\n" +
+  '{ "title": "Custos do Projeto X", "sheets": [{ "name": "Custos", ' +
+  '"columns": ["Item", "Categoria", "Qtd", "Valor Unit", "Total"], ' +
+  '"rows": [["Notebook", "Equipamento", 2, 3500, 7000]], "currencyColumns": [3, 4], "totals": true }] }\n' +
   "```\n" +
-  "Regras do bloco: valores monetários como NÚMEROS (sem 'R$' nem separador de milhar), " +
-  "`currencyColumns` são os índices 0-based das colunas de dinheiro, e o JSON deve ser " +
-  "válido (sem comentários). Gere o bloco somente quando uma planilha for de fato útil.\n\n" +
-  "GERAÇÃO DE DOCUMENTOS WORD: quando o usuário pedir um documento, proposta, relatório, " +
+  "Regras: valores monetários como NÚMEROS (sem 'R$' nem separador), `currencyColumns` são os " +
+  "índices 0-based das colunas de dinheiro, JSON válido. Gere o bloco só quando uma planilha for útil.";
+
+// Bloco de documento Word — só injetado quando o pedido é sobre documento.
+const DOC_BLOCK =
+  "\n\nGERAÇÃO DE DOCUMENTOS WORD: quando o usuário pedir um documento, proposta, relatório, " +
   "carta, contrato ou texto formatado em Word, responda normalmente e, ao final, inclua um " +
   "único bloco de código com a linguagem `alpha1-doc` contendo APENAS um JSON válido assim:\n" +
   "```alpha1-doc\n" +
-  "{\n" +
-  '  "title": "Proposta Comercial",\n' +
-  '  "blocks": [\n' +
-  '    { "type": "heading", "level": 1, "text": "Introdução" },\n' +
-  '    { "type": "paragraph", "text": "Texto do parágrafo." },\n' +
-  '    { "type": "bullets", "items": ["Item A", "Item B"] },\n' +
-  '    { "type": "numbered", "items": ["Passo 1", "Passo 2"] },\n' +
-  '    { "type": "table", "columns": ["Item", "Valor"], "rows": [["Plano X", "R$ 100"]] }\n' +
-  "  ]\n" +
-  "}\n" +
+  '{ "title": "Proposta Comercial", "blocks": [ ' +
+  '{ "type": "heading", "level": 1, "text": "Introdução" }, ' +
+  '{ "type": "paragraph", "text": "Texto." }, ' +
+  '{ "type": "bullets", "items": ["Item A", "Item B"] }, ' +
+  '{ "type": "table", "columns": ["Item", "Valor"], "rows": [["Plano X", "R$ 100"]] } ] }\n' +
   "```\n" +
-  "Tipos de bloco: heading (level 1-4), paragraph, bullets, numbered, table. O JSON deve ser " +
-  "válido. Gere o bloco somente quando um documento Word for de fato útil; caso contrário, " +
-  "responda normalmente em markdown.";
+  "Tipos de bloco: heading (level 1-4), paragraph, bullets, numbered, table. JSON válido. " +
+  "Gere o bloco só quando um documento Word for útil; caso contrário, responda em markdown.";
 
-// Janela de contexto enviada ao modelo.
-// Manter curto = prefill mais rápido = primeiro token mais rápido.
-const MAX_HISTORY_MSGS = 20;   // últimas 20 mensagens (10 trocas)
-const MAX_MSG_LENGTH = 32_000; // chars por mensagem
+const SHEET_RE = /\b(planilha|or[çc]amento|cota[çc][ãa]o|custos?|\.xlsx|excel|tabela financeira)\b/i;
+const DOC_RE = /\b(documento|proposta|relat[óo]rio|contrato|carta|comunicado|of[íi]cio|\.docx|word)\b/i;
+
+/** Monta o system prompt por INTENÇÃO: só inclui os blocos pesados (planilha/doc)
+ *  quando o texto recente do usuário indica que serão úteis. Corta tokens fixos. */
+function buildSystemPrompt(recentUserText: string): string {
+  let p = BASE_PROMPT;
+  if (SHEET_RE.test(recentUserText)) p += SHEET_BLOCK;
+  if (DOC_RE.test(recentUserText)) p += DOC_BLOCK;
+  return p;
+}
+
+// Janela de contexto. Menor = menos tokens e prefill mais rápido.
+const MAX_HISTORY_MSGS = 10;       // últimas ~5 trocas
+const MAX_MSG_LENGTH = 32_000;     // chars por mensagem (validação de entrada)
+const CONTEXT_CHAR_BUDGET = 24_000; // teto de chars de histórico+busca (~6k tokens)
+
+const MAX_TOKENS = Number(process.env.OPENAI_MAX_TOKENS || 2048); // teto de saída
 
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
+
+/** Estimativa leve de tokens (sem lib pesada no Edge): ~4 chars por token. */
+const estTokens = (s: string) => Math.ceil(s.length / 4);
 
 export async function POST(req: Request) {
   const username = await readSessionEdge(req.headers.get("cookie"));
@@ -113,8 +123,8 @@ export async function POST(req: Request) {
     });
   }
 
-  // ── Truncar histórico ──────────────────────────────────────────────
-  const trimmed: ChatMessage[] =
+  // ── Truncar histórico (por contagem) ───────────────────────────────
+  let trimmed: ChatMessage[] =
     messages.length > MAX_HISTORY_MSGS
       ? [messages[0], ...messages.slice(-MAX_HISTORY_MSGS + 1)]
       : messages;
@@ -124,6 +134,21 @@ export async function POST(req: Request) {
     ? formatSearchContext(searchQuery, searchResults)
     : "";
 
+  // ── System prompt por intenção (só blocos úteis) ────────────────────
+  const recentUserText = [...messages].reverse().find((m) => m.role === "user")?.content || "";
+  const systemPrompt = buildSystemPrompt(recentUserText);
+
+  // ── Orçamento de contexto: corta histórico antigo (preservando a 1ª msg
+  //    e as mais recentes) até caber no teto de chars. A busca, quando há,
+  //    consome parte do orçamento. Economiza tokens em conversas longas.
+  const searchChars = searchContext.length;
+  let budget = Math.max(2_000, CONTEXT_CHAR_BUDGET - searchChars);
+  const histChars = (arr: ChatMessage[]) => arr.reduce((n, m) => n + m.content.length, 0);
+  while (trimmed.length > 2 && histChars(trimmed) > budget) {
+    trimmed.splice(1, 1); // remove a mensagem mais antiga depois da primeira
+  }
+  void estTokens; // estimativa disponível para logs/ajustes futuros
+
   // ── Failover entre MODELOS do mesmo provedor (Hugging Face) ──────────
   // Mesma base e mesma chave; se um modelo falhar (conexão, timeout ou status
   // != 2xx), tentamos o próximo modelo da lista antes de desistir. NÃO troca
@@ -131,7 +156,7 @@ export async function POST(req: Request) {
   const payloadMessages = [
     {
       role: "system",
-      content: searchContext ? `${SYSTEM_PROMPT}\n\n${searchContext}` : SYSTEM_PROMPT,
+      content: searchContext ? `${systemPrompt}\n\n${searchContext}` : systemPrompt,
     },
     ...trimmed,
   ];
@@ -159,7 +184,7 @@ export async function POST(req: Request) {
       const res = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: modelId, stream: true, messages: payloadMessages }),
+        body: JSON.stringify({ model: modelId, stream: true, messages: payloadMessages, max_tokens: MAX_TOKENS }),
         signal: controller.signal,
       });
       clearTimeout(timer);
