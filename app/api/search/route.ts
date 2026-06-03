@@ -2,11 +2,11 @@
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-import { search, SafeSearchType } from "duck-duck-scrape";
 import { readSession } from "../../lib/auth";
 import type { SearchResult } from "../../lib/search";
 import { fetchAndExtract, selectRelevant } from "../../lib/extract";
 import { planQueries } from "../../lib/search-plan";
+import { searchWeb, type RawResult } from "../../lib/search-providers";
 
 // Chars de conteúdo relevante enviados ao modelo por fonte (após o rerank).
 const RELEVANT_CHARS = 900;
@@ -45,42 +45,34 @@ export async function GET(req: Request) {
     // Etapa 2: planeja 1–3 sub-queries (com fallback para a pergunta original).
     const queries = await planQueries(q);
 
-    // Busca cada sub-query em paralelo (falha individual vira lista vazia).
+    // Busca cada sub-query em paralelo (Tavily ou DuckDuckGo).
     const perQuery = await Promise.all(
-      queries.map(async (query) => {
-        try {
-          const raw = await search(query, { safeSearch: SafeSearchType.OFF });
-          return (raw.results || []).slice(0, PER_QUERY);
-        } catch {
-          return [];
-        }
-      })
+      queries.map((query) => searchWeb(query, PER_QUERY))
     );
 
     // Merge intercalado (round-robin) para diversificar, e dedupe por URL.
     const seen = new Set<string>();
-    const merged: SearchResult[] = [];
+    const merged: Array<SearchResult & { content?: string }> = [];
     const maxLen = Math.max(0, ...perQuery.map((p) => p.length));
     for (let i = 0; i < maxLen && merged.length < MAX_MERGED; i++) {
-      for (const list of perQuery) {
+      for (const list of perQuery as RawResult[][]) {
         const r = list[i];
         if (!r || !r.url) continue;
         const key = normalizeUrl(r.url);
         if (seen.has(key)) continue;
         seen.add(key);
-        merged.push({ title: r.title || "", url: r.url, description: r.description || "" });
+        merged.push({ title: r.title || "", url: r.url, description: r.description || "", content: r.content });
         if (merged.length >= MAX_MERGED) break;
       }
     }
 
-    // Lê o conteúdo real das primeiras páginas (em paralelo). Falhas individuais
-    // não derrubam a busca — a fonte simplesmente fica só com o snippet.
+    // Conteúdo por fonte: se o provedor já trouxe (Tavily), usamos; senão lemos
+    // a página (DuckDuckGo). Em ambos os casos, aplicamos o rerank (economia de
+    // tokens — só os trechos relevantes à pergunta).
     await Promise.all(
       merged.slice(0, READ_TOP_N).map(async (r) => {
-        const content = await fetchAndExtract(r.url);
-        // Rerank: envia ao modelo só os trechos relevantes à pergunta (economia
-        // de tokens) em vez da página inteira.
-        if (content) r.content = selectRelevant(content, q, RELEVANT_CHARS);
+        const full = r.content && r.content.length > 0 ? r.content : await fetchAndExtract(r.url);
+        if (full) r.content = selectRelevant(full, q, RELEVANT_CHARS);
       })
     );
 

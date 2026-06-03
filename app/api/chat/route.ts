@@ -92,13 +92,13 @@ export async function POST(req: Request) {
   const apiKey = process.env.OPENAI_API_KEY || "mangaba";
 
   let messages: ChatMessage[];
-  let requestedModel: string | undefined;
   let searchResults: SearchResult[] = [];
   let searchQuery = "";
   try {
     const body = await req.json();
     messages = body.messages;
-    requestedModel = typeof body.model === "string" ? body.model : undefined;
+    // O modelo NÃO vem do cliente: é definido pelo servidor (OPENAI_MODEL) para
+    // garantir o modelo certo e evitar abuso/custo. Ignoramos body.model.
     // Resultados de busca pré-computados pelo frontend via /api/search
     if (Array.isArray(body.searchResults)) searchResults = body.searchResults;
     if (typeof body.searchQuery === "string") searchQuery = body.searchQuery;
@@ -171,7 +171,7 @@ export async function POST(req: Request) {
     .filter(Boolean);
   const models = Array.from(
     new Set(
-      [requestedModel || process.env.OPENAI_MODEL || "", ...fallbackModels].filter(Boolean)
+      [process.env.OPENAI_MODEL || "", ...fallbackModels].filter(Boolean)
     )
   );
 
