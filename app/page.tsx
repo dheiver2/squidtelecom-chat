@@ -8,8 +8,8 @@ const INSTAGRAM = "https://www.instagram.com/squidtelecom/";
 const LINKEDIN = "https://www.linkedin.com/company/squidtelecom/";
 
 // Persona do assistente apresentado na landing.
-const ASSISTENTE = "Squid";
-const ASSISTENTE_FULL = "Squid IA";
+const ASSISTENTE = "Luna";
+const ASSISTENTE_FULL = "Luna";
 
 export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -181,7 +181,7 @@ export default function Landing() {
           <div className="marina-photo">
             <img
               src="/logo-squid.svg"
-              alt="Squid, assistente virtual da Squid Telecom"
+              alt="Luna, assistente virtual da Squid Telecom"
               loading="lazy"
               onError={(e) => {
                 const img = e.currentTarget;
@@ -189,7 +189,7 @@ export default function Landing() {
                 img.parentElement?.classList.add("no-img");
               }}
             />
-            <span className="marina-photo-fallback" aria-hidden="true">M</span>
+            <span className="marina-photo-fallback" aria-hidden="true">L</span>
             <span className="marina-photo-badge">
               <span className="dot" /> Online agora
             </span>
@@ -321,7 +321,7 @@ export default function Landing() {
 
         {/* ===================== TELAS / EM AÇÃO ===================== */}
         <section className="screens reveal">
-          <p className="eyebrow">Veja a Squid em ação</p>
+          <p className="eyebrow">Veja a Luna em ação</p>
           <h2 className="titulo-secao">
             Do pedido à <span>entrega pronta</span>
           </h2>
@@ -334,7 +334,7 @@ export default function Landing() {
             <div className="browser-body">
               <div className="sc-row sc-user"><div className="sc-bubble">Monte uma planilha de custos do projeto com 3 itens e total.</div></div>
               <div className="sc-row sc-bot">
-                <span className="sc-ava">M</span>
+                <span className="sc-ava">L</span>
                 <div className="sc-content">
                   <p>Claro! Segue a planilha de custos com os itens e o total calculado:</p>
                   <div className="sc-card">

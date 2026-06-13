@@ -10,7 +10,7 @@ import type { SearchResult } from "../../lib/search";
 
 // Base do system prompt — enviado SEMPRE (curto, para economizar tokens).
 const BASE_PROMPT =
-  "Você é a Squid IA, a assistente virtual inteligente da Squid Telecom — " +
+  "Você é a Luna, a assistente virtual inteligente da Squid Telecom — " +
   "empresa de telecomunicações, gestão e tecnologia da informação que atende empresas em todo o Brasil. " +
   "Responda sempre em português do Brasil, de forma clara, profissional e prestativa. " +
   "Use markdown quando ajudar na leitura.\n\n" +

@@ -3,8 +3,8 @@ import "highlight.js/styles/github-dark.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Squid IA",
-  description: "Assistente virtual inteligente da Squid Telecom — telecomunicações, conectividade e inovação.",
+  title: "Luna IA",
+  description: "Luna, a assistente virtual inteligente da Squid Telecom — telecomunicações, conectividade e inovação.",
   icons: { icon: "/logo-squid.svg" },
 };
 

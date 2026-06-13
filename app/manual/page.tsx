@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Manual — Squid IA",
-  description: "Guia de uso da Squid, a assistente de IA da Squid Telecom.",
+  title: "Manual — Luna IA",
+  description: "Guia de uso da Luna, a assistente de IA da Squid Telecom.",
 };
 
 const AREAS: [string, string][] = [
@@ -21,25 +21,25 @@ export default function ManualPage() {
       <header className="manual-head">
         <img src="/logo-squid.svg" alt="Squid Telecom" />
         <div>
-          <h1>Manual da Squid IA</h1>
+          <h1>Manual da Luna IA</h1>
           <p className="manual-sub">Assistente de IA da Squid Telecom — telecom, gestão e TI.</p>
         </div>
       </header>
 
-      <a className="manual-cta" href="/chat">Abrir a Squid →</a>
+      <a className="manual-cta" href="/chat">Abrir a Luna →</a>
 
       <section>
-        <h2>1. O que é a Squid</h2>
+        <h2>1. O que é a Luna</h2>
         <p>
-          A Squid é a assistente virtual da Squid Telecom. Ela conversa em português, entende o contexto da
+          A Luna é a assistente virtual da Squid Telecom. Ela conversa em português, entende o contexto da
           empresa e ajuda no dia a dia: tira dúvidas, escreve textos, pesquisa na internet, lê arquivos e
           gera planilhas e documentos prontos para baixar.
         </p>
       </section>
 
       <div className="manual-note">
-        <strong>Como a Squid trabalha — especificação primeiro.</strong> Antes de entregar
-        algo (texto, planilha, documento, análise), a Squid define a <em>especificação</em>:
+        <strong>Como a Luna trabalha — especificação primeiro.</strong> Antes de entregar
+        algo (texto, planilha, documento, análise), a Luna define a <em>especificação</em>:
         objetivo, para quem/uso, requisitos e formato. Por isso, em pedidos vagos ela pode fazer
         de 1 a 3 perguntas antes de responder. Quanto mais detalhes você der de início, mais
         rápido e certeiro fica o resultado.
@@ -68,7 +68,7 @@ export default function ManualPage() {
 
       <section>
         <h2>4. Gerar planilha (.xlsx)</h2>
-        <p>Peça uma planilha financeira, de custos, orçamento ou cotação. A Squid monta a tabela com totais e mostra o botão <strong>“Baixar .xlsx”</strong>.</p>
+        <p>Peça uma planilha financeira, de custos, orçamento ou cotação. A Luna monta a tabela com totais e mostra o botão <strong>“Baixar .xlsx”</strong>.</p>
         <p className="ex">Ex.: “Crie uma planilha de orçamento mensal com categorias, valor previsto e valor realizado.”</p>
       </section>
 
@@ -115,7 +115,7 @@ export default function ManualPage() {
         <ul>
           <li>Seja específico: diga o objetivo, o público e o formato (planilha, Word, lista…).</li>
           <li>Dê contexto: nomes, valores, prazos. Quanto mais detalhe, melhor.</li>
-          <li>Se a Squid perguntar antes de responder, é o método “especificação primeiro” — responda as perguntas e ela entrega certinho.</li>
+          <li>Se a Luna perguntar antes de responder, é o método “especificação primeiro” — responda as perguntas e ela entrega certinho.</li>
           <li>Peça ajustes: “deixe mais formal”, “adicione uma coluna de desconto”, “resuma em 5 itens”.</li>
         </ul>
       </section>
@@ -141,7 +141,7 @@ export default function ManualPage() {
       </section>
 
       <footer className="manual-foot">
-        <a className="manual-cta" href="/chat">Abrir a Squid →</a>
+        <a className="manual-cta" href="/chat">Abrir a Luna →</a>
         <a className="manual-back" href="/">← Início</a>
       </footer>
     </article>

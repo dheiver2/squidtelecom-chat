@@ -1024,7 +1024,7 @@ export default function ChatPage() {
     if (!current) return;
     const lines = [`# ${current.title}\n`];
     for (const m of current.messages) {
-      lines.push(m.role === "user" ? `**Você:** ${m.content}` : `**Squid IA:** ${m.content}`);
+      lines.push(m.role === "user" ? `**Você:** ${m.content}` : `**Luna:** ${m.content}`);
       lines.push("");
     }
     const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
@@ -1174,7 +1174,7 @@ export default function ChatPage() {
         <div className="login-card">
           <img src="/logo-squid.svg" alt="Squid Telecom" />
           <h1>Entrar</h1>
-          <p>Entre com seu e-mail e senha para usar a Squid IA.</p>
+          <p>Entre com seu e-mail e senha para usar a Luna.</p>
           <form onSubmit={login}>
             <input
               type="email"
@@ -1287,7 +1287,7 @@ export default function ChatPage() {
         <textarea
           ref={textareaRef}
           value={input}
-          placeholder={attachedFile ? "Adicione uma pergunta ou envie para resumir…" : "Envie uma mensagem para a Squid IA"}
+          placeholder={attachedFile ? "Adicione uma pergunta ou envie para resumir…" : "Envie uma mensagem para a Luna"}
           rows={1}
           onChange={(e) => {
             setInput(e.target.value);
@@ -1309,7 +1309,7 @@ export default function ChatPage() {
           </button>
         )}
       </div>
-      <div className="disclaimer">Squid IA pode cometer erros. Confira informações importantes.</div>
+      <div className="disclaimer">A Luna pode cometer erros. Confira informações importantes.</div>
       <div className="kbd-hint">
         <span><kbd>↑</kbd> editar última mensagem</span>
         <span><kbd>Esc</kbd> parar</span>
@@ -1326,7 +1326,7 @@ export default function ChatPage() {
         <div className="sidebar-top">
           <div className="brand">
             <img src="/logo-squid.svg" alt="Squid Telecom" />
-            <span>Squid IA</span>
+            <span>Luna</span>
             <button
               className="collapse-btn"
               onClick={toggleSidebarCollapsed}
@@ -1463,7 +1463,7 @@ export default function ChatPage() {
             </svg>
           </button>
           <div className="model">
-            <span className="brand-name">Squid IA</span>
+            <span className="brand-name">Luna</span>
             {/* Seletor de modelo oculto: o usuário não troca de modelo. */}
             <small>{status === "online" ? modelLabel : "offline"}</small>
           </div>
@@ -1603,7 +1603,7 @@ export default function ChatPage() {
                         <img src="/logo-squid.svg" alt="A1" />
                       </div>
                       <div className="content">
-                        <div className="name">Squid IA</div>
+                        <div className="name">Luna</div>
                         {m.content === "" ? (
                           <span className="typing">
                             <span />
@@ -1664,7 +1664,7 @@ export default function ChatPage() {
                       <img src="/logo-squid.svg" alt="A1" />
                     </div>
                     <div className="content">
-                      <div className="name">Squid IA</div>
+                      <div className="name">Luna</div>
                       <span className="typing">
                         <span />
                         <span />
