@@ -1161,7 +1161,7 @@ export default function ChatPage() {
     return (
       <div className="login-screen">
         <div className="login-card">
-          <img src="/logo-squid.svg" alt="Squid Telecom" />
+          <img src="/logo-squid.png" alt="Squid Telecom" />
           <p>Carregando…</p>
         </div>
       </div>
@@ -1172,7 +1172,7 @@ export default function ChatPage() {
     return (
       <div className="login-screen">
         <div className="login-card">
-          <img src="/logo-squid.svg" alt="Squid Telecom" />
+          <img src="/logo-squid.png" alt="Squid Telecom" />
           <h1>Entrar</h1>
           <p>Entre com seu e-mail e senha para usar a Luna.</p>
           <form onSubmit={login}>
@@ -1325,7 +1325,7 @@ export default function ChatPage() {
       <aside className="sidebar">
         <div className="sidebar-top">
           <div className="brand">
-            <img src="/logo-squid.svg" alt="Squid Telecom" />
+            <img src="/logo-squid.png" alt="Squid Telecom" />
             <span>Luna</span>
             <button
               className="collapse-btn"
@@ -1536,7 +1536,7 @@ export default function ChatPage() {
 
         {messages.length === 0 ? (
           <div className="greeting">
-            <img src="/logo-squid.svg" alt="Squid Telecom" />
+            <img src="/logo-squid.png" alt="Squid Telecom" />
             <h1>Olá, {firstName} 👋</h1>
             <div className="composer-wrap">
               {composer}
@@ -1600,7 +1600,7 @@ export default function ChatPage() {
                   ) : (
                     <div className="row assistant" key={i}>
                       <div className="avatar">
-                        <img src="/logo-squid.svg" alt="A1" />
+                        <img src="/logo-squid.png" alt="A1" />
                       </div>
                       <div className="content">
                         <div className="name">Luna</div>
@@ -1661,7 +1661,7 @@ export default function ChatPage() {
                 {waitingForFirstToken && (
                   <div className="row assistant">
                     <div className="avatar">
-                      <img src="/logo-squid.svg" alt="A1" />
+                      <img src="/logo-squid.png" alt="A1" />
                     </div>
                     <div className="content">
                       <div className="name">Luna</div>

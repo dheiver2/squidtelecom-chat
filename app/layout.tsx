@@ -5,7 +5,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Luna IA",
   description: "Luna, a assistente virtual inteligente da Squid Telecom — telecomunicações, conectividade e inovação.",
-  icons: { icon: "/logo-squid.svg" },
+  icons: { icon: "/logo-squid.png" },
 };
 
 // HTML sempre dinâmico → não é cacheado como estático (sem s-maxage de 1 ano).

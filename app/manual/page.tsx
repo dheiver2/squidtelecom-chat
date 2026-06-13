@@ -19,7 +19,7 @@ export default function ManualPage() {
   return (
     <article className="manual">
       <header className="manual-head">
-        <img src="/logo-squid.svg" alt="Squid Telecom" />
+        <img src="/logo-squid.png" alt="Squid Telecom" />
         <div>
           <h1>Manual da Luna IA</h1>
           <p className="manual-sub">Assistente de IA da Squid Telecom — telecom, gestão e TI.</p>

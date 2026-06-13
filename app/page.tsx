@@ -44,7 +44,7 @@ export default function Landing() {
           </button>
 
           <a href={SITE} className="navbar-logo">
-            <img src="/logo-squid.svg" alt="Squid Telecom" className="logo-img" />
+            <img src="/logo-squid.png" alt="Squid Telecom" className="logo-img" />
           </a>
 
           <ul className="nav-list">
@@ -180,7 +180,7 @@ export default function Landing() {
         <section className="marina reveal">
           <div className="marina-photo">
             <img
-              src="/logo-squid.svg"
+              src="/logo-squid.png"
               alt="Luna, assistente virtual da Squid Telecom"
               loading="lazy"
               onError={(e) => {
@@ -396,7 +396,7 @@ export default function Landing() {
       <footer className="site-footer">
         <div className="footer-info">
           <div className="footer-brand">
-            <img src="/logo-squid.svg" alt="Squid Telecom" />
+            <img src="/logo-squid.png" alt="Squid Telecom" />
           </div>
           <p className="footer-tagline">
             Telecomunicações · Gestão · Tecnologia da Informação — atendimento em todo o Brasil.
