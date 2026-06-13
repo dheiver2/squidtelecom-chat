@@ -5,27 +5,9 @@
 // ============================================================
 
 // E-mail → nome de exibição.
-const TEAM: Record<string, string> = {
-  "anna01.angelo@gmail.com": "Ana Maria Alves da Silva Angelo",
-  "paulafalcao@alpha1consultoria.com": "Ana Paula Falcão Freire",
-  "bkocomercial@alpha1consultoria.com": "Beatriz Iara da Silva Lopes",
-  "alpha1auxvendas@gmail.com": "Camila Cristina Gonçalves Maia Miranda",
-  "noc@alpha1consultoria.com": "Ivilly Ily Maria dos Santos Balbino",
-  "jadson.ferreira@alpha1consultoria.com": "Jadson José Ferreira",
-  "jairoribeiro@alpha1consultoria.com": "Jairo Ribeiro Maciel Neto",
-  "faturamento@alpha1consultoria.com": "Joanneglayce de Almeida Lima",
-  "financeiro@alpha1consultoria.com": "Joanneglayse de Almeida Lima Sá",
-  "analisededadosalpha1@gmail.com": "José Charles de Souza Moura",
-  "messias.mma2014@gmail.com": "Madson Messias Alves",
-  "contasapagar@alpha1consultoria.com": "Matheus Pereira da Silva Barros",
-  "maycon.tavares@alpha1consultoria.com": "Maycon Douglas Ferreira Tavares",
-  "gestao@alpha1consultoria.com": "Pollyana Nogueira de Souza B. de Aquino",
-  "operacional@alpha1consultoria.com": "Ricardo Fonseca Miranda",
-  "adm@alpha1consultoria.com": "Roberta Priscila da Silva Moreira",
-  "vitor.ar.vr@gmail.com": "Vitor de Almeida Rodrigues dos Santos",
-  "vitormoliveira90@gmail.com": "Vitor Manoel de Oliveira Caetano",
-  "williamsandrevieiradasilva@gmail.com": "Williams Andre Vieira da Silva",
-};
+// Vazio: nenhum usuário autorizado ainda. Adicione os e-mails da Squid Telecom
+// aqui (e-mail em minúsculo → nome) e rode /api/admin/seed para criar as contas.
+const TEAM: Record<string, string> = {};
 
 /** Lista de todos os e-mails autorizados (para provisionamento). */
 export function allowedEmails(): string[] {
