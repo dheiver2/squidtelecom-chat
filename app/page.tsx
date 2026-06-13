@@ -234,9 +234,7 @@ export default function Landing() {
             Internet e conectividade <span>de verdade, em Alagoas</span>
           </h2>
           <p className="passos-sub">
-            Provedora de internet de Alagoas, a Squid Telecom leva fibra óptica e soluções
-            corporativas de conectividade para residências e empresas — com estabilidade,
-            velocidade e atendimento de quem é da região.
+            Fibra óptica e conectividade corporativa para residências e empresas de Alagoas.
           </p>
 
           <div className="vantagens-lista">
@@ -285,27 +283,6 @@ export default function Landing() {
               <p>Interligação segura de filiais e unidades em rede privada, com tráfego priorizado.</p>
             </div>
 
-            <div className="vantagem-item">
-              <div className="icone-container">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 12.5a10 10 0 0114 0M8 15.5a6 6 0 018 0" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
-                  <circle cx="12" cy="18.5" r="1.4" fill="#fff" />
-                </svg>
-              </div>
-              <h3>Hotspot e Wi-Fi</h3>
-              <p>Soluções de Wi-Fi e hotspot para condomínios, comércios e áreas de grande circulação.</p>
-            </div>
-
-            <div className="vantagem-item">
-              <div className="icone-container">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.8" />
-                  <path d="M8 12.5l2.5 2.5L16 9.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <h3>Atendimento com a {ASSISTENTE}</h3>
-              <p>Suporte potencializado pela {ASSISTENTE}, a IA da Squid Telecom, disponível 24 horas.</p>
-            </div>
           </div>
         </section>
 
@@ -316,10 +293,7 @@ export default function Landing() {
             Provedora alagoana de internet <span>desde 2011</span>
           </h2>
           <p className="passos-sub">
-            Fundada em 2011 e com sede em Rio Largo, Alagoas, a Squid Telecom (Squid Net
-            Telecomunicações) é uma provedora de internet autorizada pela Anatel. Levamos
-            conectividade em fibra óptica e soluções corporativas com a proximidade e o
-            atendimento de quem conhece a região.
+            Provedora de internet autorizada pela Anatel, com sede em Rio Largo e atendimento de quem é da região.
           </p>
 
           <div className="hero-stats" style={{ justifyContent: "center", marginTop: "8px" }}>
@@ -490,8 +464,7 @@ export default function Landing() {
             Contato <span>Squid Telecom</span>
           </h2>
           <p className="passos-sub">
-            Quer contratar internet, tirar dúvidas ou falar com o suporte? Escolha o canal que
-            preferir — atendemos com a proximidade de quem é de Alagoas.
+            Contratar, tirar dúvidas ou falar com o suporte — escolha o canal que preferir.
           </p>
 
           <div className="vantagens-lista">

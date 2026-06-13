@@ -2343,55 +2343,37 @@ body {
 
 .vantagens-lista {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
-  max-width: 1000px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 18px;
+  max-width: 1040px;
   margin: 0 auto;
 }
 
 .vantagem-item {
   position: relative;
-  background: #fff;
+  background: var(--squid-branco);
   border: 1px solid var(--borda);
-  border-radius: 18px;
-  padding: 34px 26px;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(108, 92, 231, 0.06);
-  overflow: hidden;
-  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
-}
-.vantagem-item::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: var(--gradient-squid);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.35s ease;
+  border-radius: 16px;
+  padding: 32px 28px;
+  text-align: left;
+  transition: transform 0.3s ease, border-color 0.3s ease;
 }
 .vantagem-item:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 22px 48px rgba(108, 92, 231, 0.16);
-  border-color: rgba(108, 92, 231, 0.3);
-}
-.vantagem-item:hover::before {
-  transform: scaleX(1);
+  transform: translateY(-4px);
+  border-color: var(--squid-rosa);
 }
 
 .icone-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: var(--gradient-squid);
-  border-radius: 16px;
-  width: 60px;
-  height: 60px;
-  margin: 0 auto 18px;
-  box-shadow: 0 10px 22px rgba(108, 92, 231, 0.32);
+  background: var(--squid-rosa);
+  border-radius: 12px;
+  width: 46px;
+  height: 46px;
+  margin: 0 0 18px;
 }
+.icone-container svg { width: 22px; height: 22px; }
 
 .vantagem-item h3 {
   color: var(--squid-preto);
