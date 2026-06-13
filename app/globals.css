@@ -67,6 +67,17 @@ body {
   height: 100%;
 }
 
+/* Navegação por âncoras suave + offset para o header fixo da landing. */
+html {
+  scroll-behavior: smooth;
+}
+.site [id] {
+  scroll-margin-top: 96px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
 body {
   font-family: "Inter", -apple-system, Arial, sans-serif;
   color: var(--texto);
@@ -2473,6 +2484,59 @@ body {
 }
 
 /* Banda CTA final */
+/* ===================== FAQ ===================== */
+.faq {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 24px 0 8px;
+}
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 32px;
+}
+.faq-item {
+  border: 1px solid var(--borda);
+  border-radius: 16px;
+  background: var(--squid-cinza-claro);
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.faq-item[open] {
+  border-color: var(--squid-roxo);
+  background: var(--ativo);
+}
+.faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 18px 22px;
+  font-weight: 600;
+  font-size: 1.02rem;
+  color: var(--texto);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: "+";
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--squid-roxo);
+  font-weight: 400;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+.faq-item[open] summary::after { transform: rotate(45deg); }
+.faq-item p {
+  padding: 0 22px 20px;
+  margin: 0;
+  color: var(--texto-suave);
+  line-height: 1.7;
+}
+
 .cta-band {
   position: relative;
   isolation: isolate;

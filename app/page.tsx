@@ -98,7 +98,7 @@ export default function Landing() {
             </span>
 
             <h1 className="hero-title">
-              Conheça a <span className="hero-highlight">{ASSISTENTE}</span>, a assistente de IA da Squid Telecom
+              Converse com a <span className="hero-highlight">{ASSISTENTE}</span>, a IA da Squid Telecom
             </h1>
 
             <p className="hero-lead">
@@ -574,6 +574,59 @@ export default function Landing() {
           <p className="footer-copy" style={{ textAlign: "center", marginTop: "18px" }}>
             Squid Net Telecomunicações Ltda · CNPJ 13.827.747/0001-60
           </p>
+        </section>
+
+        {/* ===================== FAQ ===================== */}
+        <section className="faq reveal" id="faq">
+          <p className="eyebrow">Perguntas frequentes</p>
+          <h2 className="titulo-secao">
+            Tudo sobre a <span>{ASSISTENTE}</span>
+          </h2>
+
+          <div className="faq-list">
+            <details className="faq-item">
+              <summary>O que é a {ASSISTENTE}?</summary>
+              <p>
+                É a assistente de inteligência artificial da Squid Telecom, treinada no universo
+                de internet, telecom e atendimento da empresa. Ela responde em português, de forma
+                clara e profissional, para a sua equipe e seus clientes.
+              </p>
+            </details>
+
+            <details className="faq-item">
+              <summary>A {ASSISTENTE} fica disponível quando?</summary>
+              <p>24 horas por dia, 7 dias por semana — sem fila e sem horário comercial.</p>
+            </details>
+
+            <details className="faq-item">
+              <summary>Minhas conversas são privadas?</summary>
+              <p>
+                Sim. As conversas ficam no ambiente da Squid Telecom e não são expostas a serviços
+                de terceiros. A chave de acesso ao motor de IA fica somente no servidor.
+              </p>
+            </details>
+
+            <details className="faq-item">
+              <summary>A {ASSISTENTE} gera documentos e planilhas?</summary>
+              <p>
+                Sim. Ela cria planilhas (.xlsx) e documentos Word (.docx) na hora, e também lê
+                arquivos PDF, Word e Excel que você anexar.
+              </p>
+            </details>
+
+            <details className="faq-item">
+              <summary>Ela pesquisa na internet?</summary>
+              <p>Sim — quando útil, a {ASSISTENTE} busca na web e cita as fontes das informações.</p>
+            </details>
+
+            <details className="faq-item">
+              <summary>Quem pode acessar a plataforma?</summary>
+              <p>
+                Apenas usuários autorizados pela Squid Telecom. O acesso é por e-mail e senha,
+                liberado pelo administrador da empresa.
+              </p>
+            </details>
+          </div>
         </section>
 
         {/* ===================== CTA BAND ===================== */}
