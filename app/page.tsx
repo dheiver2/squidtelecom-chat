@@ -102,9 +102,8 @@ export default function Landing() {
             </h1>
 
             <p className="hero-lead">
-              A {ASSISTENTE} é a inteligência artificial da Squid Telecom: treinada no universo de
-              telecomunicações, gestão e tecnologia da informação da empresa. Ela atende a sua equipe e
-              os seus clientes em linguagem natural — privada, especializada e disponível 24 horas.
+              A inteligência artificial da Squid Telecom. Atende sua equipe e seus clientes em
+              linguagem natural — privada, especializada e disponível 24 horas.
             </p>
 
             <div className="hero-cta">
@@ -166,10 +165,21 @@ export default function Landing() {
               </div>
             </div>
             <div className="mock-float mock-float-1">
-              <span className="mock-float-icon">🔒</span> Dados privados
+              <span className="mock-float-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="2" />
+                  <path d="M8 11V8a4 4 0 018 0v3" stroke="currentColor" strokeWidth="2" />
+                </svg>
+              </span>
+              Dados privados
             </div>
             <div className="mock-float mock-float-2">
-              <span className="mock-float-icon">⚡</span> Resposta instantânea
+              <span className="mock-float-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                </svg>
+              </span>
+              Resposta instantânea
             </div>
           </div>
         </div>
@@ -295,70 +305,6 @@ export default function Landing() {
               </div>
               <h3>Atendimento com a {ASSISTENTE}</h3>
               <p>Suporte potencializado pela {ASSISTENTE}, a IA da Squid Telecom, disponível 24 horas.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* ===================== VANTAGENS ===================== */}
-        <section className="vantagens reveal">
-          <p className="eyebrow">Por que a {ASSISTENTE}</p>
-          <h2 className="titulo-secao">
-            Uma assistente <span>feita sob medida</span> para a Squid Telecom
-          </h2>
-
-          <div className="vantagens-lista">
-            <div className="vantagem-item">
-              <div className="icone-container">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M12 2l7 3v6c0 5-3.5 8.5-7 9-3.5-.5-7-4-7-9V5l7-3z"
-                    stroke="#fff"
-                    strokeWidth="1.8"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M9 12l2 2 4-4"
-                    stroke="#fff"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <h3>Privado e seguro</h3>
-              <p>As conversas ficam no ambiente da Squid Telecom, sem expor dados a serviços de terceiros.</p>
-            </div>
-
-            <div className="vantagem-item">
-              <div className="icone-container">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M12 3l2.09 4.26L18.8 8l-3.4 3.32.8 4.68L12 13.8 7.8 16l.8-4.68L5.2 8l4.71-.74L12 3z"
-                    stroke="#fff"
-                    strokeWidth="1.8"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <h3>Personalizada</h3>
-              <p>A {ASSISTENTE} é treinada com o conhecimento, os serviços e a linguagem da Squid Telecom.</p>
-            </div>
-
-            <div className="vantagem-item">
-              <div className="icone-container">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.8" />
-                  <path
-                    d="M12 7v5l3.5 2"
-                    stroke="#fff"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <h3>Disponível 24h</h3>
-              <p>A {ASSISTENTE} responde sua equipe e seus clientes com rapidez e especialização, a qualquer hora.</p>
             </div>
           </div>
         </section>
@@ -507,10 +453,33 @@ export default function Landing() {
           </div>
 
           <div className="screens-feats">
-            <span>📊 Planilhas .xlsx</span>
-            <span>📄 Documentos .docx</span>
-            <span>🔎 Busca com fontes</span>
-            <span>📎 Lê PDF, Word e Excel</span>
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                <path d="M3 9h18M3 14h18M9 4v16M15 4v16" stroke="currentColor" strokeWidth="1.4" />
+              </svg>
+              Planilhas .xlsx
+            </span>
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M6 3h8l4 4v14a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                <path d="M14 3v4h4M8 13h8M8 16h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+              Documentos .docx
+            </span>
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
+                <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+              Busca com fontes
+            </span>
+            <span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M19 11l-7.5 7.5a4 4 0 01-5.5-5.5L13 5.5a2.5 2.5 0 013.5 3.5L9 16.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Lê PDF, Word e Excel
+            </span>
           </div>
         </section>
 

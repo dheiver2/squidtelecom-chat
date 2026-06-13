@@ -1761,8 +1761,8 @@ body {
 .orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.55;
+  filter: blur(90px);
+  opacity: 0.22;
 }
 .orb-1 {
   width: 460px;
@@ -1789,13 +1789,7 @@ body {
 }
 
 .grid-overlay {
-  position: absolute;
-  inset: 0;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-  background-size: 46px 46px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 30%, transparent 75%);
+  display: none;
 }
 
 @keyframes floaty {
@@ -2105,7 +2099,9 @@ body {
   animation: floaty 6s ease-in-out infinite;
 }
 .mock-float-icon {
-  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  color: var(--squid-roxo);
 }
 .mock-float-1 {
   top: 22px;
@@ -2222,11 +2218,15 @@ body {
   margin-top: 26px;
 }
 .screens-feats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   background: var(--squid-cinza-claro);
   color: var(--squid-preto);
   font-size: 0.85rem; font-weight: 600;
   padding: 7px 14px; border-radius: 999px;
 }
+.screens-feats span svg { color: var(--squid-roxo); flex-shrink: 0; }
 
 /* ===================== CONHEÇA A MARINA ===================== */
 .marina {

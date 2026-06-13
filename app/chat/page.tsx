@@ -1535,7 +1535,7 @@ export default function ChatPage() {
         {messages.length === 0 ? (
           <div className="greeting">
             <img src="/logo-squid.png" alt="Squid Telecom" />
-            <h1>Olá, {firstName} 👋</h1>
+            <h1>Olá, {firstName}</h1>
             <div className="composer-wrap">
               {composer}
               <div className="chips">
