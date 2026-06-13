@@ -1,14 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
-  <defs>
-    <linearGradient id="squidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#D7265B"/>
-      <stop offset="50%" stop-color="#E71D5F"/>
-      <stop offset="100%" stop-color="#FF003C"/>
-    </linearGradient>
-  </defs>
-  <!-- Diagonal bar - elemento estrutural (roxo) -->
-  <line x1="22" y1="106" x2="106" y2="22" stroke="#6C5CE7" stroke-width="16" stroke-linecap="round"/>
-  <!-- S curve / fita contínua (gradiente rosa-vermelho) -->
-  <path d="M88 88 C68 106 34 100 34 76 C34 58 50 50 62 58 C76 66 76 50 62 42 C50 36 34 42 32 52" 
-        stroke="url(#squidGrad)" stroke-width="16" stroke-linecap="round" fill="none"/>
+  <!-- Barra diagonal (roxo vibrante) -->
+  <line x1="20" y1="100" x2="100" y2="20" stroke="#635BFF" stroke-width="14" stroke-linecap="round"/>
+  
+  <!-- Círculo vermelho/carmesim -->
+  <circle cx="60" cy="60" r="40" stroke="#DE1B52" stroke-width="12" fill="none"/>
+  
+  <!-- Cauda superior horizontal -->
+  <line x1="60" y1="20" x2="100" y2="20" stroke="#DE1B52" stroke-width="12" stroke-linecap="round"/>
+  
+  <!-- Cauda inferior horizontal -->
+  <line x1="20" y1="100" x2="60" y2="100" stroke="#DE1B52" stroke-width="12" stroke-linecap="round"/>
+  
+  <!-- Degrau superior da hélice (perpendicular à diagonal) -->
+  <line x1="23.55" y1="43.55" x2="50" y2="70" stroke="#DE1B52" stroke-width="12" stroke-linecap="round"/>
+  
+  <!-- Degrau inferior da hélice (perpendicular à diagonal) -->
+  <line x1="70" y1="50" x2="96.45" y2="76.45" stroke="#DE1B52" stroke-width="12" stroke-linecap="round"/>
 </svg>
