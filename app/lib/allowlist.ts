@@ -7,7 +7,9 @@
 // E-mail → nome de exibição.
 // Vazio: nenhum usuário autorizado ainda. Adicione os e-mails da Squid Telecom
 // aqui (e-mail em minúsculo → nome) e rode /api/admin/seed para criar as contas.
-const TEAM: Record<string, string> = {};
+const TEAM: Record<string, string> = {
+  "adm@squidtelecom.com.br": "Administrador Squid Telecom",
+};
 
 /** Lista de todos os e-mails autorizados (para provisionamento). */
 export function allowedEmails(): string[] {
