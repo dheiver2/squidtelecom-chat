@@ -49,22 +49,22 @@ export default function Landing() {
 
           <ul className="nav-list">
             <li className="nav-item">
-              <a href={`${SITE}/index.html`} className="nav-link">
+              <a href="#home" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Home
               </a>
             </li>
             <li className="nav-item">
-              <a href={`${SITE}/servicos.html`} className="nav-link">
+              <a href="#servicos" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Nossos Serviços
               </a>
             </li>
             <li className="nav-item">
-              <a href={`${SITE}/sobre.html`} className="nav-link">
+              <a href="#sobre" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Sobre
               </a>
             </li>
             <li className="nav-item">
-              <a href={`${SITE}/contato.html`} className="nav-link">
+              <a href="#contato" className="nav-link" onClick={() => setMenuOpen(false)}>
                 Contato
               </a>
             </li>
@@ -83,7 +83,7 @@ export default function Landing() {
       </header>
 
       {/* ===================== HERO ===================== */}
-      <section className="hero">
+      <section className="hero" id="home">
         <div className="hero-decor" aria-hidden="true">
           <span className="orb orb-1" />
           <span className="orb orb-2" />
@@ -217,6 +217,88 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* ===================== NOSSOS SERVIÇOS ===================== */}
+        <section className="vantagens reveal" id="servicos">
+          <p className="eyebrow">Nossos serviços</p>
+          <h2 className="titulo-secao">
+            Internet e conectividade <span>de verdade, em Alagoas</span>
+          </h2>
+          <p className="passos-sub">
+            Provedora de internet de Alagoas, a Squid Telecom leva fibra óptica e soluções
+            corporativas de conectividade para residências e empresas — com estabilidade,
+            velocidade e atendimento de quem é da região.
+          </p>
+
+          <div className="vantagens-lista">
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path d="M2 8.5C5.5 5 9.5 3.5 12 3.5S18.5 5 22 8.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M5 12c2.5-2.3 5-3.3 7-3.3s4.5 1 7 3.3" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+                  <path d="M8.5 15.5c1.4-1.2 2.4-1.6 3.5-1.6s2.1.4 3.5 1.6" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+                  <circle cx="12" cy="19" r="1.3" fill="#fff" />
+                </svg>
+              </div>
+              <h3>Internet via fibra óptica</h3>
+              <p>Banda larga em fibra para casa e empresa, com alta velocidade e baixa latência.</p>
+            </div>
+
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 19V9m5 10V5m5 14v-7m5 7V8" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h3>Links dedicados</h3>
+              <p>Conexão dedicada de alta disponibilidade para empresas que não podem ficar fora do ar.</p>
+            </div>
+
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="4" width="18" height="13" rx="2" stroke="#fff" strokeWidth="1.8" />
+                  <path d="M7 9h6M7 12h4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h3>IP dedicado</h3>
+              <p>Endereço IP fixo e exclusivo para servidores, câmeras, VPNs e aplicações corporativas.</p>
+            </div>
+
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.8" />
+                  <path d="M3.5 12h17M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h3>VPN MPLS</h3>
+              <p>Interligação segura de filiais e unidades em rede privada, com tráfego priorizado.</p>
+            </div>
+
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12.5a10 10 0 0114 0M8 15.5a6 6 0 018 0" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+                  <circle cx="12" cy="18.5" r="1.4" fill="#fff" />
+                </svg>
+              </div>
+              <h3>Hotspot e Wi-Fi</h3>
+              <p>Soluções de Wi-Fi e hotspot para condomínios, comércios e áreas de grande circulação.</p>
+            </div>
+
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.8" />
+                  <path d="M8 12.5l2.5 2.5L16 9.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <h3>Atendimento com a {ASSISTENTE}</h3>
+              <p>Suporte potencializado pela {ASSISTENTE}, a IA da Squid Telecom, disponível 24 horas.</p>
+            </div>
+          </div>
+        </section>
+
         {/* ===================== VANTAGENS ===================== */}
         <section className="vantagens reveal">
           <p className="eyebrow">Por que a {ASSISTENTE}</p>
@@ -277,6 +359,72 @@ export default function Landing() {
               </div>
               <h3>Disponível 24h</h3>
               <p>A {ASSISTENTE} responde sua equipe e seus clientes com rapidez e especialização, a qualquer hora.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================== SOBRE ===================== */}
+        <section className="vantagens reveal" id="sobre">
+          <p className="eyebrow">Sobre a Squid Telecom</p>
+          <h2 className="titulo-secao">
+            Provedora alagoana de internet <span>desde 2011</span>
+          </h2>
+          <p className="passos-sub">
+            Fundada em 2011 e com sede em Rio Largo, Alagoas, a Squid Telecom (Squid Net
+            Telecomunicações) é uma provedora de internet autorizada pela Anatel. Levamos
+            conectividade em fibra óptica e soluções corporativas com a proximidade e o
+            atendimento de quem conhece a região.
+          </p>
+
+          <div className="hero-stats" style={{ justifyContent: "center", marginTop: "8px" }}>
+            <div className="hero-stat">
+              <span className="hero-stat-num">2011</span>
+              <span className="hero-stat-label">Fundada em Alagoas</span>
+            </div>
+            <span className="hero-stat-sep" />
+            <div className="hero-stat">
+              <span className="hero-stat-num">Rio Largo</span>
+              <span className="hero-stat-label">Sede · AL</span>
+            </div>
+            <span className="hero-stat-sep" />
+            <div className="hero-stat">
+              <span className="hero-stat-num">Anatel</span>
+              <span className="hero-stat-label">Provedora autorizada</span>
+            </div>
+          </div>
+
+          <div className="vantagens-lista">
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.8" />
+                  <circle cx="12" cy="12" r="4.5" stroke="#fff" strokeWidth="1.8" />
+                  <circle cx="12" cy="12" r="1.3" fill="#fff" />
+                </svg>
+              </div>
+              <h3>Missão</h3>
+              <p>Conectar pessoas e empresas de Alagoas com internet rápida, estável e confiável.</p>
+            </div>
+
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" />
+                  <circle cx="12" cy="12" r="2.6" stroke="#fff" strokeWidth="1.8" />
+                </svg>
+              </div>
+              <h3>Visão</h3>
+              <p>Ser a provedora de internet referência em proximidade e qualidade na região.</p>
+            </div>
+
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 21s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.5-7 10-7 10z" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <h3>Valores</h3>
+              <p>Atendimento próximo, transparência e compromisso com a experiência do cliente.</p>
             </div>
           </div>
         </section>
@@ -366,6 +514,68 @@ export default function Landing() {
           </div>
         </section>
 
+        {/* ===================== CONTATO ===================== */}
+        <section className="vantagens reveal" id="contato">
+          <p className="eyebrow">Fale com a gente</p>
+          <h2 className="titulo-secao">
+            Contato <span>Squid Telecom</span>
+          </h2>
+          <p className="passos-sub">
+            Quer contratar internet, tirar dúvidas ou falar com o suporte? Escolha o canal que
+            preferir — atendemos com a proximidade de quem é de Alagoas.
+          </p>
+
+          <div className="vantagens-lista">
+            <a className="vantagem-item" href="tel:+558233525248" style={{ textDecoration: "none" }}>
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 4h3l1.5 4-2 1.5a11 11 0 005 5l1.5-2 4 1.5v3a2 2 0 01-2.2 2A16 16 0 013 6.2 2 2 0 015 4z" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <h3>Telefone</h3>
+              <p>(82) 3352-5248</p>
+            </a>
+
+            <a className="vantagem-item" href="https://www.squidtelecom.com.br" target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="9" stroke="#fff" strokeWidth="1.8" />
+                  <path d="M3.5 12h17M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h3>Site</h3>
+              <p>squidtelecom.com.br</p>
+            </a>
+
+            <div className="vantagem-item">
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 21s-7-5-7-10a7 7 0 0114 0c0 5-7 10-7 10z" stroke="#fff" strokeWidth="1.8" strokeLinejoin="round" />
+                  <circle cx="12" cy="11" r="2.5" stroke="#fff" strokeWidth="1.8" />
+                </svg>
+              </div>
+              <h3>Endereço</h3>
+              <p>Rio Largo · Alagoas</p>
+            </div>
+
+            <a className="vantagem-item" href={INSTAGRAM} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+              <div className="icone-container">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="3" width="18" height="18" rx="5" stroke="#fff" strokeWidth="1.8" />
+                  <circle cx="12" cy="12" r="4" stroke="#fff" strokeWidth="1.8" />
+                  <circle cx="17.5" cy="6.5" r="1.2" fill="#fff" />
+                </svg>
+              </div>
+              <h3>Instagram</h3>
+              <p>@squidtelecom</p>
+            </a>
+          </div>
+
+          <p className="footer-copy" style={{ textAlign: "center", marginTop: "18px" }}>
+            Squid Net Telecomunicações Ltda · CNPJ 13.827.747/0001-60
+          </p>
+        </section>
+
         {/* ===================== CTA BAND ===================== */}
         <section className="cta-band reveal">
           <div className="cta-band-decor" aria-hidden="true">
@@ -399,7 +609,7 @@ export default function Landing() {
             <img src="/logo-squid.png" alt="Squid Telecom" />
           </div>
           <p className="footer-tagline">
-            Telecomunicações · Gestão · Tecnologia da Informação — atendimento em todo o Brasil.
+            Provedora de internet via fibra óptica · Rio Largo, Alagoas · desde 2011.
           </p>
           <div className="social-links">
             <a href={INSTAGRAM} target="_blank" rel="noreferrer" className="social-link" aria-label="Instagram">
