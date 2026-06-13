@@ -16,6 +16,8 @@ interface Message {
   content: string;
   /** Fontes da web usadas nesta resposta (quando a busca foi acionada). */
   sources?: Source[];
+  /** Imagem anexada (data URI) — só na sessão; não é persistida. */
+  image?: string;
 }
 interface Conversation {
   id: string;
@@ -497,6 +499,9 @@ export default function ChatPage() {
   const [attachedFile, setAttachedFile] = useState<{ name: string; content: string } | null>(null);
   const [fileLoading, setFileLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Imagem anexada (visão) — data URI reduzido.
+  const [attachedImage, setAttachedImage] = useState<{ name: string; dataUrl: string } | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [webSearch, setWebSearch] = useState(false);
   // Ditado por voz (Web Speech API).
   const [listening, setListening] = useState(false);
@@ -684,10 +689,18 @@ export default function ChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  // Salva no localStorage (cache) e sincroniza com o servidor (debounced)
+  // Salva no localStorage (cache) e sincroniza com o servidor (debounced).
+  // Imagens (data URI) NÃO são persistidas — ficam só na sessão atual — para
+  // não inchar o cache do navegador.
   useEffect(() => {
     if (user && conversations.length) {
-      try { localStorage.setItem(storageKeyFor(user), JSON.stringify(conversations)); } catch {}
+      try {
+        const lean = conversations.map((c) => ({
+          ...c,
+          messages: c.messages.map(({ image, ...m }) => m),
+        }));
+        localStorage.setItem(storageKeyFor(user), JSON.stringify(lean));
+      } catch { /* quota cheia: ignora */ }
     }
   }, [conversations, user]);
 
@@ -894,10 +907,15 @@ export default function ChatPage() {
         }
       }
 
+      // Imagem da última mensagem do usuário (visão). Enviada à parte; as
+      // imagens são removidas do array `messages` para não inflar o payload.
+      const lastUserImage = [...history].reverse().find((m) => m.role === "user" && m.image)?.image;
+      const apiMessages = history.map(({ image, ...m }) => m);
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, model: modelId, searchResults, searchQuery, agent: agentId }),
+        body: JSON.stringify({ messages: apiMessages, model: modelId, searchResults, searchQuery, agent: agentId, image: lastUserImage }),
         signal: controller.signal,
       });
 
@@ -990,7 +1008,7 @@ export default function ChatPage() {
 
   function send(text: string) {
     const rawContent = text.trim();
-    if ((!rawContent && !attachedFile) || loading) return;
+    if ((!rawContent && !attachedFile && !attachedImage) || loading) return;
     if (status !== "online") {
       setError("A Luna está offline no momento. Tente novamente em instantes.");
       return;
@@ -998,18 +1016,20 @@ export default function ChatPage() {
     // Injeta conteúdo do arquivo no início da mensagem
     const content = attachedFile
       ? `Arquivo: ${attachedFile.name}\n\`\`\`\n${attachedFile.content.slice(0, 24_000)}\n\`\`\`\n\n${rawContent || "Resuma o conteúdo acima."}`
-      : rawContent;
+      : rawContent || (attachedImage ? "Analise esta imagem e me ajude." : "");
 
     const isFirst = messages.length === 0;
     const userMsg: Message = { role: "user", content };
+    if (attachedImage) userMsg.image = attachedImage.dataUrl;
     const history = [...messages, userMsg];
     updateCurrent((c) => ({
       ...c,
-      title: isFirst ? (rawContent || attachedFile?.name || "Arquivo").slice(0, 40) : c.title,
+      title: isFirst ? (rawContent || attachedFile?.name || (attachedImage ? "Imagem" : "Arquivo")).slice(0, 40) : c.title,
       messages: [...c.messages, userMsg],
     }));
     setInput("");
     setAttachedFile(null);
+    setAttachedImage(null);
     if (textareaRef.current) textareaRef.current.style.height = "auto";
     runCompletion(history);
   }
@@ -1124,6 +1144,46 @@ export default function ChatPage() {
 
   function exportPrint() {
     window.print();
+  }
+
+  // ---- Anexar imagem (visão) ----
+  // Reduz para no máx. 1024px e re-codifica em JPEG (leve) antes de enviar.
+  async function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!e.target.files) return;
+    e.target.value = "";
+    if (!file || !file.type.startsWith("image/")) return;
+    try {
+      const dataUrl = await new Promise<string>((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result as string);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+      const img = new Image();
+      const reduced = await new Promise<string>((res) => {
+        img.onload = () => {
+          const max = 1024;
+          let { width, height } = img;
+          if (width > max || height > max) {
+            const r = Math.min(max / width, max / height);
+            width = Math.round(width * r);
+            height = Math.round(height * r);
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return res(dataUrl);
+          ctx.drawImage(img, 0, 0, width, height);
+          res(canvas.toDataURL("image/jpeg", 0.72));
+        };
+        img.onerror = () => res(dataUrl);
+        img.src = dataUrl;
+      });
+      setAttachedImage({ name: file.name, dataUrl: reduced });
+    } catch {
+      setError("Não foi possível ler a imagem.");
+    }
   }
 
   // ---- Anexar arquivo ----
@@ -1389,6 +1449,18 @@ export default function ChatPage() {
           </button>
         </div>
       )}
+      {attachedImage && (
+        <div className="image-chip">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={attachedImage.dataUrl} alt={attachedImage.name} />
+          <span>{attachedImage.name}</span>
+          <button onClick={() => setAttachedImage(null)} aria-label="Remover imagem">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
+      )}
       <div className="input-box">
         {/* Botão anexar arquivo */}
         <input
@@ -1398,6 +1470,28 @@ export default function ChatPage() {
           style={{ display: "none" }}
           onChange={handleFileSelect}
         />
+        {/* Input de imagem (visão) */}
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={handleImageSelect}
+        />
+        {/* Botão enviar imagem */}
+        <button
+          className={`attach-btn${attachedImage ? " active" : ""}`}
+          onClick={() => imageInputRef.current?.click()}
+          disabled={loading}
+          aria-label="Enviar foto"
+          title="Enviar foto (a Luna analisa a imagem)"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.8"/>
+            <circle cx="8.5" cy="10" r="1.5" stroke="currentColor" strokeWidth="1.6"/>
+            <path d="M21 16l-5-5-7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
         {/* Botão busca na web */}
         <button
           className={`attach-btn${webSearch ? " active" : ""}`}
@@ -1749,6 +1843,10 @@ export default function ChatPage() {
                         </div>
                       ) : (
                         <>
+                          {m.image && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img className="bubble-image" src={m.image} alt="Imagem enviada" />
+                          )}
                           <div className="bubble">{m.content}</div>
                           {!loading && (
                             <button

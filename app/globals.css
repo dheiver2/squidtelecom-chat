@@ -1451,6 +1451,55 @@ body {
   margin-bottom: 8px;
   max-width: 100%;
 }
+
+/* Prévia da imagem anexada (visão) */
+.image-chip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--squid-cinza-claro);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  padding: 6px 10px 6px 6px;
+  font-size: 0.8rem;
+  color: var(--texto);
+  margin-bottom: 8px;
+  max-width: 100%;
+}
+.image-chip img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.image-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.image-chip button {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--texto-suave);
+  display: flex;
+  padding: 2px;
+}
+.image-chip button:hover { color: var(--squid-rosa); }
+
+/* Imagem enviada na bolha da mensagem do usuário */
+.bubble-image {
+  display: block;
+  max-width: 260px;
+  max-height: 260px;
+  width: auto;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  margin-left: auto;
+  border: 1px solid var(--borda);
+}
 .file-chip span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-chip button {
   border: none;

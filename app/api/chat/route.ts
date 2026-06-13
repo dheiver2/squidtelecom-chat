@@ -123,6 +123,7 @@ export async function POST(req: Request) {
   let searchResults: SearchResult[] = [];
   let searchQuery = "";
   let agent = "";
+  let imageDataUrl = "";
   try {
     const body = await req.json();
     messages = body.messages;
@@ -133,6 +134,10 @@ export async function POST(req: Request) {
     if (typeof body.searchQuery === "string") searchQuery = body.searchQuery;
     // Agente especializado selecionado no cliente (foco do atendimento).
     if (typeof body.agent === "string") agent = body.agent;
+    // Imagem (data URI) para análise por visão, quando enviada.
+    if (typeof body.image === "string" && body.image.startsWith("data:image/")) {
+      imageDataUrl = body.image;
+    }
     if (!Array.isArray(messages)) throw new Error();
 
     // Validação básica
@@ -184,13 +189,31 @@ export async function POST(req: Request) {
   // Mesma base e mesma chave; se um modelo falhar (conexão, timeout ou status
   // != 2xx), tentamos o próximo modelo da lista antes de desistir. NÃO troca
   // de provedor.
-  const payloadMessages = [
+  // payloadMessages aceita conteúdo string OU multimodal (texto + imagem).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const payloadMessages: any[] = [
     {
       role: "system",
       content: searchContext ? `${systemPrompt}\n\n${searchContext}` : systemPrompt,
     },
     ...trimmed,
   ];
+
+  // ── Visão: anexa a imagem à ÚLTIMA mensagem do usuário (formato OpenAI) ──
+  if (imageDataUrl) {
+    for (let i = payloadMessages.length - 1; i >= 0; i--) {
+      if (payloadMessages[i].role === "user") {
+        payloadMessages[i] = {
+          role: "user",
+          content: [
+            { type: "text", text: payloadMessages[i].content || "Analise esta imagem." },
+            { type: "image_url", image_url: { url: imageDataUrl } },
+          ],
+        };
+        break;
+      }
+    }
+  }
 
   const baseUrl = (process.env.OPENAI_BASE_URL || "https://router.huggingface.co/v1").replace(/\/$/, "");
 
@@ -200,11 +223,13 @@ export async function POST(req: Request) {
     .split(",")
     .map((m) => m.trim())
     .filter(Boolean);
-  const models = Array.from(
-    new Set(
-      [process.env.OPENAI_MODEL || "", ...fallbackModels].filter(Boolean)
-    )
-  );
+  // Com imagem, usa o modelo de VISÃO (os modelos de texto não enxergam).
+  const visionModel = process.env.OPENAI_VISION_MODEL || "Qwen/Qwen2.5-VL-72B-Instruct";
+  const models = imageDataUrl
+    ? [visionModel]
+    : Array.from(
+        new Set([process.env.OPENAI_MODEL || "", ...fallbackModels].filter(Boolean))
+      );
 
   // Timeout só para a CONEXÃO/headers — não corta o streaming já iniciado.
   const CONNECT_TIMEOUT_MS = 20_000;
