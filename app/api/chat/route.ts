@@ -57,12 +57,38 @@ const DOC_BLOCK =
 const SHEET_RE = /\b(planilha|or[çc]amento|cota[çc][ãa]o|custos?|\.xlsx|excel|tabela financeira)\b/i;
 const DOC_RE = /\b(documento|proposta|relat[óo]rio|contrato|carta|comunicado|of[íi]cio|\.docx|word)\b/i;
 
+// Agentes especializados: cada um adiciona um FOCO ao system prompt.
+// O id vem do cliente (body.agent); valores desconhecidos caem no geral.
+const AGENT_PROMPTS: Record<string, string> = {
+  suporte:
+    "\n\nFOCO DESTE ATENDIMENTO — SUPORTE TÉCNICO: ajude a diagnosticar problemas de internet " +
+    "(lentidão, quedas, sem conexão, Wi-Fi, configuração de roteador e equipamentos de fibra) com " +
+    "passos claros, numerados e objetivos. Quando faltar informação (plano, equipamento, sintoma, " +
+    "luzes do modem), pergunte antes de concluir. Não invente dados da conta do cliente.",
+  comercial:
+    "\n\nFOCO DESTE ATENDIMENTO — COMERCIAL: apresente os serviços da Squid Telecom (internet em " +
+    "fibra, link dedicado, IP dedicado, VPN MPLS), ajude o cliente a escolher a melhor opção e oriente " +
+    "sobre contratação e disponibilidade. Seja consultivo e direto. Não invente preços nem prazos: " +
+    "quando não souber, oriente a confirmar pelos canais oficiais.",
+  financeiro:
+    "\n\nFOCO DESTE ATENDIMENTO — FINANCEIRO: oriente sobre faturas, 2ª via, datas de vencimento, " +
+    "formas de pagamento e renegociação. NUNCA invente valores, datas ou dados de contas; sempre " +
+    "oriente o cliente a confirmar pelos canais oficiais da Squid Telecom.",
+  documentos:
+    "\n\nFOCO DESTE ATENDIMENTO — DOCUMENTOS: priorize entregar planilhas (.xlsx) e documentos Word " +
+    "(.docx) bem estruturados conforme o pedido, usando os formatos de bloco indicados.",
+};
+
 /** Monta o system prompt por INTENÇÃO: só inclui os blocos pesados (planilha/doc)
- *  quando o texto recente do usuário indica que serão úteis. Corta tokens fixos. */
-function buildSystemPrompt(recentUserText: string): string {
+ *  quando o texto recente do usuário indica que serão úteis. Corta tokens fixos.
+ *  Também adiciona o FOCO do agente selecionado (se houver). */
+function buildSystemPrompt(recentUserText: string, agent?: string): string {
   let p = BASE_PROMPT;
-  if (SHEET_RE.test(recentUserText)) p += SHEET_BLOCK;
-  if (DOC_RE.test(recentUserText)) p += DOC_BLOCK;
+  const agentBlock = agent ? AGENT_PROMPTS[agent] : undefined;
+  if (agentBlock) p += agentBlock;
+  // Agente "documentos" sempre traz os dois blocos de formato.
+  if (agent === "documentos" || SHEET_RE.test(recentUserText)) p += SHEET_BLOCK;
+  if (agent === "documentos" || DOC_RE.test(recentUserText)) p += DOC_BLOCK;
   return p;
 }
 
@@ -96,6 +122,7 @@ export async function POST(req: Request) {
   let messages: ChatMessage[];
   let searchResults: SearchResult[] = [];
   let searchQuery = "";
+  let agent = "";
   try {
     const body = await req.json();
     messages = body.messages;
@@ -104,6 +131,8 @@ export async function POST(req: Request) {
     // Resultados de busca pré-computados pelo frontend via /api/search
     if (Array.isArray(body.searchResults)) searchResults = body.searchResults;
     if (typeof body.searchQuery === "string") searchQuery = body.searchQuery;
+    // Agente especializado selecionado no cliente (foco do atendimento).
+    if (typeof body.agent === "string") agent = body.agent;
     if (!Array.isArray(messages)) throw new Error();
 
     // Validação básica
@@ -138,7 +167,7 @@ export async function POST(req: Request) {
 
   // ── System prompt por intenção (só blocos úteis) ────────────────────
   const recentUserText = [...messages].reverse().find((m) => m.role === "user")?.content || "";
-  const systemPrompt = buildSystemPrompt(recentUserText);
+  const systemPrompt = buildSystemPrompt(recentUserText, agent);
 
   // ── Orçamento de contexto: corta histórico antigo (preservando a 1ª msg
   //    e as mais recentes) até caber no teto de chars. A busca, quando há,

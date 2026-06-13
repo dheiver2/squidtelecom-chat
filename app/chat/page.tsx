@@ -31,6 +31,38 @@ const SUGGESTIONS = [
   "Quais as vantagens de IPs fixos e válidos?",
 ];
 
+// Agentes especializados — o id é enviado ao /api/chat e foca o atendimento.
+const AGENTS: { id: string; name: string; desc: string; icon: JSX.Element }[] = [
+  {
+    id: "geral", name: "Luna Geral", desc: "Dúvidas e atendimento geral",
+    icon: (<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.7"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+  },
+  {
+    id: "suporte", name: "Suporte Técnico", desc: "Internet lenta, quedas, Wi-Fi",
+    icon: (<svg viewBox="0 0 24 24" fill="none"><path d="M3 8.5C6 6 9 4.8 12 4.8S18 6 21 8.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M6 12c2-1.8 4-2.6 6-2.6s4 .8 6 2.6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M9 15.5c1-.9 2-1.3 3-1.3s2 .4 3 1.3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/></svg>),
+  },
+  {
+    id: "comercial", name: "Comercial", desc: "Planos, contratação e cobertura",
+    icon: (<svg viewBox="0 0 24 24" fill="none"><path d="M4 9l8-5 8 5v9a2 2 0 01-2 2H6a2 2 0 01-2-2V9z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M9 20v-6h6v6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/></svg>),
+  },
+  {
+    id: "financeiro", name: "Financeiro", desc: "Faturas, 2ª via e pagamento",
+    icon: (<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" strokeWidth="1.7"/><path d="M3 10h18" stroke="currentColor" strokeWidth="1.7"/><path d="M7 15h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></svg>),
+  },
+  {
+    id: "documentos", name: "Documentos", desc: "Planilhas e propostas na hora",
+    icon: (<svg viewBox="0 0 24 24" fill="none"><path d="M6 3h8l4 4v14a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M14 3v4h4M8 13h8M8 16h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>),
+  },
+];
+
+// Diferenciais da Luna mostrados no estado inicial.
+const DIFERENCIAIS: { label: string; icon: JSX.Element }[] = [
+  { label: "Privado e seguro", icon: (<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.8"/><path d="M8 11V8a4 4 0 018 0v3" stroke="currentColor" strokeWidth="1.8"/></svg>) },
+  { label: "Disponível 24h", icon: (<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/><path d="M12 7v5l3.5 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>) },
+  { label: "Gera .xlsx e .docx", icon: (<svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>) },
+  { label: "Busca com fontes", icon: (<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>) },
+];
+
 // Histórico fica no dispositivo de cada usuário, com chave por usuário.
 const storageKeyFor = (user: string) => `squid-conversations:${user}`;
 
@@ -434,6 +466,8 @@ export default function ChatPage() {
   const [fileLoading, setFileLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [webSearch, setWebSearch] = useState(false);
+  // Agente especializado selecionado (foco do atendimento).
+  const [agentId, setAgentId] = useState<string>("geral");
   // Modelo padrão (interno, não exposto ao usuário).
   const [globalModel, setGlobalModel] = useState<string>("");
   // Sync de conversas — um timer de debounce POR conversa (evita que edições
@@ -450,7 +484,15 @@ export default function ChatPage() {
     document.documentElement.setAttribute("data-theme", preferred);
     // Estado de colapso da sidebar (desktop)
     setSidebarCollapsed(localStorage.getItem("a1-sidebar-collapsed") === "1");
+    // Agente selecionado anteriormente
+    const savedAgent = localStorage.getItem("squid-agent");
+    if (savedAgent && AGENTS.some((a) => a.id === savedAgent)) setAgentId(savedAgent);
   }, []);
+
+  // Persiste o agente selecionado.
+  useEffect(() => {
+    localStorage.setItem("squid-agent", agentId);
+  }, [agentId]);
 
   // Some o aviso de sync automaticamente após alguns segundos.
   useEffect(() => {
@@ -808,7 +850,7 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, model: modelId, searchResults, searchQuery }),
+        body: JSON.stringify({ messages: history, model: modelId, searchResults, searchQuery, agent: agentId }),
         signal: controller.signal,
       });
 
@@ -1213,8 +1255,27 @@ export default function ChatPage() {
   const firstName = (userName || user).split(/[\s@.]/)[0];
   const initial = displayLabel.trim().charAt(0).toUpperCase() || "U";
 
+  const agentBar = (
+    <div className="agent-bar" aria-label="Escolha o agente">
+      {AGENTS.map((a) => (
+        <button
+          key={a.id}
+          type="button"
+          className={`agent-pill${agentId === a.id ? " active" : ""}`}
+          onClick={() => setAgentId(a.id)}
+          title={a.desc}
+          aria-pressed={agentId === a.id}
+        >
+          <span className="agent-pill-ico">{a.icon}</span>
+          {a.name}
+        </button>
+      ))}
+    </div>
+  );
+
   const composer = (
     <div className="composer">
+      {agentBar}
       {error && <div className="error">{error}</div>}
       {fileLoading && (
         <div className="file-loading">
@@ -1536,6 +1597,15 @@ export default function ChatPage() {
           <div className="greeting">
             <img src="/logo-squid.png" alt="Squid Telecom" />
             <h1>Olá, {firstName}</h1>
+            <p className="greeting-sub">Como a Luna pode ajudar você hoje?</p>
+            <div className="diferenciais">
+              {DIFERENCIAIS.map((d) => (
+                <span className="dif-badge" key={d.label}>
+                  <span className="dif-ico">{d.icon}</span>
+                  {d.label}
+                </span>
+              ))}
+            </div>
             <div className="composer-wrap">
               {composer}
               <div className="chips">

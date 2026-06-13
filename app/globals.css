@@ -1173,8 +1173,70 @@ body {
   font-size: 1.7rem;
   font-weight: 700;
   color: var(--squid-preto);
+  margin-bottom: 6px;
+}
+.greeting-sub {
+  font-size: 1rem;
+  color: var(--texto-suave);
+  margin-bottom: 20px;
+}
+
+/* Diferenciais (estado inicial) */
+.diferenciais {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
   margin-bottom: 26px;
 }
+.dif-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--texto-suave);
+  background: var(--squid-cinza-claro);
+  border: 1px solid var(--borda);
+  padding: 6px 13px;
+  border-radius: 999px;
+}
+.dif-ico {
+  display: inline-flex;
+  color: var(--squid-roxo);
+}
+.dif-ico svg { width: 15px; height: 15px; }
+
+/* Barra de agentes (no topo do composer) */
+.agent-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 10px;
+}
+.agent-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--texto-suave);
+  background: transparent;
+  border: 1px solid var(--borda);
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+.agent-pill:hover { border-color: var(--squid-roxo); color: var(--texto); }
+.agent-pill.active {
+  background: var(--squid-rosa);
+  border-color: var(--squid-rosa);
+  color: #fff;
+}
+.agent-pill-ico { display: inline-flex; }
+.agent-pill-ico svg { width: 15px; height: 15px; }
 
 .greeting .composer-wrap {
   width: 100%;
