@@ -1,19 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
-  <!-- Barra diagonal (roxo vibrante) -->
-  <line x1="20" y1="100" x2="100" y2="20" stroke="#635BFF" stroke-width="14" stroke-linecap="round"/>
-  
-  <!-- Círculo vermelho/carmesim -->
-  <circle cx="60" cy="60" r="40" stroke="#DE1B52" stroke-width="12" fill="none"/>
-  
-  <!-- Cauda superior horizontal -->
-  <line x1="60" y1="20" x2="100" y2="20" stroke="#DE1B52" stroke-width="12" stroke-linecap="round"/>
-  
-  <!-- Cauda inferior horizontal -->
-  <line x1="20" y1="100" x2="60" y2="100" stroke="#DE1B52" stroke-width="12" stroke-linecap="round"/>
-  
-  <!-- Degrau superior da hélice (perpendicular à diagonal) -->
-  <line x1="23.55" y1="43.55" x2="50" y2="70" stroke="#DE1B52" stroke-width="12" stroke-linecap="round"/>
-  
-  <!-- Degrau inferior da hélice (perpendicular à diagonal) -->
-  <line x1="70" y1="50" x2="96.45" y2="76.45" stroke="#DE1B52" stroke-width="12" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 230" width="200" height="230">
+  <defs>
+    <clipPath id="topClip">
+      <rect x="0" y="0" width="200" height="115"/>
+    </clipPath>
+    <clipPath id="bottomClip">
+      <rect x="0" y="115" width="200" height="115"/>
+    </clipPath>
+  </defs>
+
+  <!-- Arco superior do S: círculo centrado à direita, visível só na metade superior -->
+  <circle cx="115" cy="75" r="55" fill="none" stroke="#E8194A" stroke-width="18" clip-path="url(#topClip)"/>
+
+  <!-- Arco inferior do S: círculo centrado à esquerda, visível só na metade inferior -->
+  <circle cx="85" cy="155" r="55" fill="none" stroke="#E8194A" stroke-width="18" clip-path="url(#bottomClip)"/>
+
+  <!-- Barra diagonal roxa (de cima-direita para baixo-esquerda) -->
+  <line x1="158" y1="52" x2="42" y2="178" stroke="#7B6FE8" stroke-width="20" stroke-linecap="round"/>
 </svg>
