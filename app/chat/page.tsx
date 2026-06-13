@@ -7,7 +7,6 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { ENGINE_NAME } from "../lib/mangaba";
 import { APP_BUILD } from "../lib/build";
 
 type Role = "user" | "assistant";
@@ -401,7 +400,6 @@ export default function ChatPage() {
   const [loginError, setLoginError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
   const [status, setStatus] = useState<EngineStatus>("checking");
-  const [modelLabel, setModelLabel] = useState("Mangaba 1");
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentId, setCurrentId] = useState<string>("");
@@ -564,7 +562,7 @@ export default function ChatPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.online) {
-          if (data.model) setModelLabel(data.model);
+          // Nome do modelo NÃO é armazenado nem exibido.
           // Modelo padrão (não exposto ao usuário — sem troca de modelo).
           setGlobalModel((prev) => prev || data.defaultModelId || data.models?.[0]?.id || "");
           setStatus("online");
@@ -815,7 +813,7 @@ export default function ChatPage() {
       });
 
       if (!res.ok || !res.body) {
-        let msg = `Falha ao gerar resposta no ${ENGINE_NAME}.`;
+        let msg = "Falha ao gerar a resposta. Tente novamente.";
         try {
           const e = await res.json();
           if (e?.error) msg = e.error;
@@ -905,7 +903,7 @@ export default function ChatPage() {
     const rawContent = text.trim();
     if ((!rawContent && !attachedFile) || loading) return;
     if (status !== "online") {
-      setError(`O ${ENGINE_NAME} não está conectado.`);
+      setError("A Luna está offline no momento. Tente novamente em instantes.");
       return;
     }
     // Injeta conteúdo do arquivo no início da mensagem
@@ -1464,10 +1462,10 @@ export default function ChatPage() {
           </button>
           <div className="model">
             <span className="brand-name">Luna</span>
-            {/* Seletor de modelo oculto: o usuário não troca de modelo. */}
-            <small>{status === "online" ? modelLabel : "offline"}</small>
+            {/* Nome do modelo NÃO é exibido — apenas o status de conexão. */}
+            <small>{status === "online" ? "Online" : "Offline"}</small>
           </div>
-          <div className={`conn ${status}`} title={`Status do ${ENGINE_NAME}`}>
+          <div className={`conn ${status}`} title="Status da conexão">
             <span className="dot" />
             {status === "online" ? "Online" : status === "checking" ? "..." : "Offline"}
           </div>
