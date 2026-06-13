@@ -24,12 +24,40 @@ interface Conversation {
   model?: string; // modelo específico desta conversa
 }
 
-const SUGGESTIONS = [
-  "Quais serviços a Squid Telecom oferece?",
-  "O que é internet com velocidade simétrica?",
-  "Como funciona o suporte técnico 24 horas?",
-  "Quais as vantagens de IPs fixos e válidos?",
-];
+// Sugestões de ações do dia a dia — variam conforme o agente selecionado.
+const SUGGESTIONS_BY_AGENT: Record<string, string[]> = {
+  geral: [
+    "Quais serviços a Squid Telecom oferece?",
+    "Como funciona o suporte 24 horas?",
+    "Como falar com um atendente humano?",
+    "Quero indicar a Squid para um amigo",
+  ],
+  suporte: [
+    "Minha internet está lenta hoje",
+    "Minha internet caiu, e agora?",
+    "Como deixar meu Wi-Fi mais forte?",
+    "Como reiniciar o roteador do jeito certo?",
+  ],
+  comercial: [
+    "Tem cobertura no meu endereço?",
+    "Quais planos de fibra vocês têm?",
+    "Quero fazer upgrade do meu plano",
+    "Qual a diferença entre link dedicado e banda larga?",
+  ],
+  financeiro: [
+    "Como tiro a 2ª via da minha fatura?",
+    "Quando vence a minha fatura?",
+    "Quais as formas de pagamento?",
+    "Posso mudar a data de vencimento?",
+  ],
+  documentos: [
+    "Monte uma proposta comercial de internet",
+    "Planilha comparando 3 planos de fibra",
+    "Gere um contrato de prestação de serviço",
+    "Vou anexar um PDF; faça um resumo dele",
+  ],
+};
+const suggestionsForAgent = (id: string) => SUGGESTIONS_BY_AGENT[id] || SUGGESTIONS_BY_AGENT.geral;
 
 // Agentes especializados — o id é enviado ao /api/chat e foca o atendimento.
 const AGENTS: { id: string; name: string; desc: string; icon: JSX.Element }[] = [
@@ -55,12 +83,16 @@ const AGENTS: { id: string; name: string; desc: string; icon: JSX.Element }[] = 
   },
 ];
 
-// Diferenciais da Luna mostrados no estado inicial.
+// Diferenciais da Luna vs. concorrentes (foco em resolver o dia a dia na hora).
 const DIFERENCIAIS: { label: string; icon: JSX.Element }[] = [
-  { label: "Privado e seguro", icon: (<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.8"/><path d="M8 11V8a4 4 0 018 0v3" stroke="currentColor" strokeWidth="1.8"/></svg>) },
-  { label: "Disponível 24h", icon: (<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/><path d="M12 7v5l3.5 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>) },
-  { label: "Gera .xlsx e .docx", icon: (<svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="1.8"/><path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>) },
-  { label: "Busca com fontes", icon: (<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8"/><path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>) },
+  // Sem espera / sem fila (≠ call center)
+  { label: "Resolve na hora, sem fila", icon: (<svg viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>) },
+  // 24h, todo dia (≠ horário comercial)
+  { label: "24h, todos os dias", icon: (<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/><path d="M12 7v5l3.5 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>) },
+  // Conversa natural (≠ robô de menu/URA)
+  { label: "Sem robô de menu", icon: (<svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14a1 1 0 011 1v9a1 1 0 01-1 1H9l-4 4V6a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/></svg>) },
+  // Autoatendimento (≠ precisar ligar e esperar)
+  { label: "Resolve sem precisar ligar", icon: (<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>) },
 ];
 
 // Histórico fica no dispositivo de cada usuário, com chave por usuário.
@@ -1609,7 +1641,7 @@ export default function ChatPage() {
             <div className="composer-wrap">
               {composer}
               <div className="chips">
-                {SUGGESTIONS.map((s) => (
+                {suggestionsForAgent(agentId).map((s) => (
                   <button key={s} onClick={() => send(s)}>
                     {s}
                   </button>
