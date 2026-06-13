@@ -1397,6 +1397,20 @@ body {
   color: var(--squid-roxo);
   background: var(--ativo);
 }
+/* Ditado por voz ativo: microfone vermelho pulsando. */
+.attach-btn.listening {
+  color: #fff;
+  background: var(--squid-rosa);
+  animation: mic-pulse 1.3s ease-in-out infinite;
+}
+.attach-btn.listening:hover { color: #fff; background: var(--squid-rosa); }
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(222, 27, 82, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(222, 27, 82, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .attach-btn.listening { animation: none; }
+}
 
 .web-search-badge {
   display: flex;

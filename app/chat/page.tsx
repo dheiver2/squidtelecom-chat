@@ -498,6 +498,11 @@ export default function ChatPage() {
   const [fileLoading, setFileLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [webSearch, setWebSearch] = useState(false);
+  // Ditado por voz (Web Speech API).
+  const [listening, setListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
   // Agente especializado selecionado (foco do atendimento).
   const [agentId, setAgentId] = useState<string>("geral");
   // Modelo padrão (interno, não exposto ao usuário).
@@ -525,6 +530,16 @@ export default function ChatPage() {
   useEffect(() => {
     localStorage.setItem("squid-agent", agentId);
   }, [agentId]);
+
+  // Detecta suporte a ditado por voz (Web Speech API) e limpa ao desmontar.
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    setVoiceSupported(!!SR);
+    return () => {
+      try { recognitionRef.current?.stop(); } catch { /* ignore */ }
+    };
+  }, []);
 
   // Some o aviso de sync automaticamente após alguns segundos.
   useEffect(() => {
@@ -1287,6 +1302,41 @@ export default function ChatPage() {
   const firstName = (userName || user).split(/[\s@.]/)[0];
   const initial = displayLabel.trim().charAt(0).toUpperCase() || "U";
 
+  // Liga/desliga o ditado por voz. Transcreve para o campo de mensagem em pt-BR.
+  function toggleVoice() {
+    if (listening) {
+      try { recognitionRef.current?.stop(); } catch { /* ignore */ }
+      return;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    const rec = new SR();
+    recognitionRef.current = rec;
+    rec.lang = "pt-BR";
+    rec.interimResults = true;
+    rec.continuous = false;
+    // Texto já digitado é preservado; a fala é anexada a ele.
+    const base = input.trim() ? input.trim() + " " : "";
+    rec.onstart = () => setListening(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rec.onerror = (ev: any) => {
+      setListening(false);
+      if (ev?.error === "not-allowed" || ev?.error === "service-not-allowed") {
+        setError("Permita o acesso ao microfone para usar o ditado por voz.");
+      }
+    };
+    rec.onend = () => { setListening(false); recognitionRef.current = null; };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    rec.onresult = (e: any) => {
+      let transcript = "";
+      for (let i = 0; i < e.results.length; i++) transcript += e.results[i][0].transcript;
+      setInput(base + transcript);
+      requestAnimationFrame(autoGrow);
+    };
+    try { rec.start(); } catch { /* já iniciado */ }
+  }
+
   const agentBar = (
     <div className="agent-bar" aria-label="Escolha o agente">
       {AGENTS.map((a) => (
@@ -1362,6 +1412,23 @@ export default function ChatPage() {
             <path d="M11 8v6M8 11h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
           </svg>
         </button>
+
+        {/* Botão de voz (ditado) — só quando o navegador suporta */}
+        {voiceSupported && (
+          <button
+            className={`attach-btn${listening ? " listening" : ""}`}
+            onClick={toggleVoice}
+            disabled={loading}
+            aria-label={listening ? "Parar ditado" : "Falar a mensagem"}
+            aria-pressed={listening}
+            title={listening ? "Ouvindo… clique para parar" : "Falar a mensagem (ditado por voz)"}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" strokeWidth="1.8"/>
+              <path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+          </button>
+        )}
 
         {/* Botão anexar arquivo */}
         <button
