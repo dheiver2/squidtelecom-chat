@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-const SITE = "http://alpha1consultoria.com";
-const WHATSAPP = "https://wa.me/5582999825657";
-const INSTAGRAM = "https://www.instagram.com/alpha1consultoria_/";
-const LINKEDIN = "https://www.linkedin.com/company/alpha1consultoria/posts/?feedView=all";
+const SITE = "https://www.instagram.com/squidtelecom/";
+const WHATSAPP = "https://wa.me/5511999999999";
+const INSTAGRAM = "https://www.instagram.com/squidtelecom/";
+const LINKEDIN = "https://www.linkedin.com/company/squidtelecom/";
 
 // Persona do assistente apresentado na landing.
-const ASSISTENTE = "Marina";
-const ASSISTENTE_FULL = "Marina Assistente";
+const ASSISTENTE = "Squid";
+const ASSISTENTE_FULL = "Squid IA";
 
 export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -44,7 +44,7 @@ export default function Landing() {
           </button>
 
           <a href={SITE} className="navbar-logo">
-            <img src="/logo-alpha1.png" alt="Alpha 1 Consultoria" className="logo-img" />
+            <img src="/logo-squid.svg" alt="Squid Telecom" className="logo-img" />
           </a>
 
           <ul className="nav-list">
@@ -94,15 +94,15 @@ export default function Landing() {
           <div className="hero-copy">
             <span className="hero-badge">
               <span className="hero-badge-dot" />
-              {ASSISTENTE} · Assistente de IA da Alpha 1
+              {ASSISTENTE} · Assistente de IA da Squid Telecom
             </span>
 
             <h1 className="hero-title">
-              Conheça a <span className="hero-highlight">{ASSISTENTE}</span>, a assistente de IA da Alpha 1
+              Conheça a <span className="hero-highlight">{ASSISTENTE}</span>, a assistente de IA da Squid Telecom
             </h1>
 
             <p className="hero-lead">
-              A {ASSISTENTE} é a inteligência artificial da Alpha 1 Consultoria: treinada no universo de
+              A {ASSISTENTE} é a inteligência artificial da Squid Telecom: treinada no universo de
               telecomunicações, gestão e tecnologia da informação da empresa. Ela atende a sua equipe e
               os seus clientes em linguagem natural — privada, especializada e disponível 24 horas.
             </p>
@@ -113,7 +113,7 @@ export default function Landing() {
                 <span className="btn-arrow">→</span>
               </a>
               <a className="btn-ghost btn-lg" href={WHATSAPP} target="_blank" rel="noreferrer">
-                Falar com a Alpha 1
+                Falar com a Squid Telecom
               </a>
             </div>
 
@@ -130,7 +130,7 @@ export default function Landing() {
               <span className="hero-stat-sep" />
               <div className="hero-stat">
                 <span className="hero-stat-num">Sob medida</span>
-                <span className="hero-stat-label">Para a Alpha 1</span>
+                <span className="hero-stat-label">Para a Squid Telecom</span>
               </div>
             </div>
           </div>
@@ -149,10 +149,10 @@ export default function Landing() {
               </div>
               <div className="chat-mock-body">
                 <div className="mock-bubble mock-bot">
-                  Oi! Sou a {ASSISTENTE}, assistente da Alpha 1. Como posso ajudar você hoje?
+                  Oi! Sou a {ASSISTENTE}, assistente da Squid Telecom. Como posso ajudar você hoje?
                 </div>
                 <div className="mock-bubble mock-user">
-                  Quais serviços de telecom a Alpha 1 oferece?
+                  Quais serviços de telecom a Squid Telecom oferece?
                 </div>
                 <div className="mock-bubble mock-bot mock-typing">
                   <span className="typing">
@@ -180,8 +180,8 @@ export default function Landing() {
         <section className="marina reveal">
           <div className="marina-photo">
             <img
-              src="/marina.png"
-              alt="Marina, assistente virtual da Alpha 1 Consultoria"
+              src="/logo-squid.svg"
+              alt="Squid, assistente virtual da Squid Telecom"
               loading="lazy"
               onError={(e) => {
                 const img = e.currentTarget;
@@ -198,10 +198,10 @@ export default function Landing() {
           <div className="marina-copy">
             <p className="eyebrow">Quem é a {ASSISTENTE}</p>
             <h2 className="titulo-secao">
-              Sua especialista virtual na <span>Alpha 1</span>
+              Sua especialista virtual na <span>Squid Telecom</span>
             </h2>
             <p className="marina-lead">
-              A {ASSISTENTE} é a assistente de inteligência artificial da Alpha 1 Consultoria. Ela conhece
+              A {ASSISTENTE} é a assistente de inteligência artificial da Squid Telecom. Ela conhece
               os serviços de telecomunicações, gestão e TI da empresa e responde em português, de forma
               clara e profissional — como uma colega de equipe que nunca tira folga.
             </p>
@@ -221,7 +221,7 @@ export default function Landing() {
         <section className="vantagens reveal">
           <p className="eyebrow">Por que a {ASSISTENTE}</p>
           <h2 className="titulo-secao">
-            Uma assistente <span>feita sob medida</span> para a Alpha 1
+            Uma assistente <span>feita sob medida</span> para a Squid Telecom
           </h2>
 
           <div className="vantagens-lista">
@@ -244,7 +244,7 @@ export default function Landing() {
                 </svg>
               </div>
               <h3>Privado e seguro</h3>
-              <p>As conversas ficam no ambiente da Alpha 1, sem expor dados a serviços de terceiros.</p>
+              <p>As conversas ficam no ambiente da Squid Telecom, sem expor dados a serviços de terceiros.</p>
             </div>
 
             <div className="vantagem-item">
@@ -259,7 +259,7 @@ export default function Landing() {
                 </svg>
               </div>
               <h3>Personalizada</h3>
-              <p>A {ASSISTENTE} é treinada com o conhecimento, os serviços e a linguagem da Alpha 1 Consultoria.</p>
+              <p>A {ASSISTENTE} é treinada com o conhecimento, os serviços e a linguagem da Squid Telecom.</p>
             </div>
 
             <div className="vantagem-item">
@@ -303,7 +303,7 @@ export default function Landing() {
               <div className="passo-body">
                 <h3>Pergunte à {ASSISTENTE}</h3>
                 <p>
-                  Fale sobre serviços, processos e atendimento da Alpha 1 em linguagem natural — a{" "}
+                  Fale sobre serviços, processos e atendimento da Squid Telecom em linguagem natural — a{" "}
                   {ASSISTENTE} entende o contexto do seu negócio e ainda gera planilhas e documentos.
                 </p>
               </div>
@@ -321,7 +321,7 @@ export default function Landing() {
 
         {/* ===================== TELAS / EM AÇÃO ===================== */}
         <section className="screens reveal">
-          <p className="eyebrow">Veja a Marina em ação</p>
+          <p className="eyebrow">Veja a Squid em ação</p>
           <h2 className="titulo-secao">
             Do pedido à <span>entrega pronta</span>
           </h2>
@@ -329,7 +329,7 @@ export default function Landing() {
           <div className="browser-frame">
             <div className="browser-bar">
               <span className="bdot r" /><span className="bdot y" /><span className="bdot g" />
-              <span className="burl">alpha1-ia.online/chat</span>
+              <span className="burl">squid-ia.online/chat</span>
             </div>
             <div className="browser-body">
               <div className="sc-row sc-user"><div className="sc-bubble">Monte uma planilha de custos do projeto com 3 itens e total.</div></div>
@@ -373,7 +373,7 @@ export default function Landing() {
           </div>
           <div className="cta-band-inner">
             <h2>Pronto para conversar com a {ASSISTENTE}?</h2>
-            <p>A assistente de IA da Alpha 1, sempre que você precisar.</p>
+            <p>A assistente de IA da Squid Telecom, sempre que você precisar.</p>
             <a className="btn-light btn-lg" href="/chat">
               Conversar com a {ASSISTENTE} <span className="btn-arrow">→</span>
             </a>
@@ -396,7 +396,7 @@ export default function Landing() {
       <footer className="site-footer">
         <div className="footer-info">
           <div className="footer-brand">
-            <img src="/logo-alpha1.png" alt="Alpha 1 Consultoria" />
+            <img src="/logo-squid.svg" alt="Squid Telecom" />
           </div>
           <p className="footer-tagline">
             Telecomunicações · Gestão · Tecnologia da Informação — atendimento em todo o Brasil.
@@ -420,7 +420,7 @@ export default function Landing() {
               </svg>
             </a>
           </div>
-          <p className="footer-copy">© 2026 Alpha 1 Consultoria. {ASSISTENTE_FULL} — assistente de IA corporativa.</p>
+          <p className="footer-copy">© 2026 Squid Telecom. {ASSISTENTE_FULL} — assistente de IA corporativa.</p>
         </div>
       </footer>
     </div>

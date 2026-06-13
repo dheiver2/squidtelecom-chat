@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Manual — Marina Assistente",
-  description: "Guia de uso da Marina, a assistente de IA da Alpha 1 Consultoria.",
+  title: "Manual — Squid IA",
+  description: "Guia de uso da Squid, a assistente de IA da Squid Telecom.",
 };
 
 const AREAS: [string, string][] = [
@@ -19,27 +19,27 @@ export default function ManualPage() {
   return (
     <article className="manual">
       <header className="manual-head">
-        <img src="/logo-alpha1.png" alt="Alpha 1" />
+        <img src="/logo-squid.svg" alt="Squid Telecom" />
         <div>
-          <h1>Manual da Marina Assistente</h1>
-          <p className="manual-sub">Assistente de IA da Alpha 1 Consultoria — telecom, gestão e TI.</p>
+          <h1>Manual da Squid IA</h1>
+          <p className="manual-sub">Assistente de IA da Squid Telecom — telecom, gestão e TI.</p>
         </div>
       </header>
 
-      <a className="manual-cta" href="/chat">Abrir a Marina →</a>
+      <a className="manual-cta" href="/chat">Abrir a Squid →</a>
 
       <section>
-        <h2>1. O que é a Marina</h2>
+        <h2>1. O que é a Squid</h2>
         <p>
-          A Marina é a assistente virtual da Alpha 1. Ela conversa em português, entende o contexto da
+          A Squid é a assistente virtual da Squid Telecom. Ela conversa em português, entende o contexto da
           empresa e ajuda no dia a dia: tira dúvidas, escreve textos, pesquisa na internet, lê arquivos e
           gera planilhas e documentos prontos para baixar.
         </p>
       </section>
 
       <div className="manual-note">
-        <strong>Como a Marina trabalha — especificação primeiro.</strong> Antes de entregar
-        algo (texto, planilha, documento, análise), a Marina define a <em>especificação</em>:
+        <strong>Como a Squid trabalha — especificação primeiro.</strong> Antes de entregar
+        algo (texto, planilha, documento, análise), a Squid define a <em>especificação</em>:
         objetivo, para quem/uso, requisitos e formato. Por isso, em pedidos vagos ela pode fazer
         de 1 a 3 perguntas antes de responder. Quanto mais detalhes você der de início, mais
         rápido e certeiro fica o resultado.
@@ -48,7 +48,7 @@ export default function ManualPage() {
       <section>
         <h2>2. Como acessar</h2>
         <ol>
-          <li>Abra a plataforma: <strong>https://alpha1-ia.online</strong></li>
+          <li>Abra a plataforma: <strong>https://squid-ia.online</strong></li>
           <li>Clique em <strong>Entrar</strong> e informe seu <strong>e-mail</strong> e a <strong>senha</strong> que recebeu.</li>
           <li>A senha diferencia maiúsculas de minúsculas — digite exatamente como recebeu.</li>
           <li>Para sair, clique no botão de logout ao lado do seu nome (canto inferior esquerdo).</li>
@@ -68,7 +68,7 @@ export default function ManualPage() {
 
       <section>
         <h2>4. Gerar planilha (.xlsx)</h2>
-        <p>Peça uma planilha financeira, de custos, orçamento ou cotação. A Marina monta a tabela com totais e mostra o botão <strong>“Baixar .xlsx”</strong>.</p>
+        <p>Peça uma planilha financeira, de custos, orçamento ou cotação. A Squid monta a tabela com totais e mostra o botão <strong>“Baixar .xlsx”</strong>.</p>
         <p className="ex">Ex.: “Crie uma planilha de orçamento mensal com categorias, valor previsto e valor realizado.”</p>
       </section>
 
@@ -115,7 +115,7 @@ export default function ManualPage() {
         <ul>
           <li>Seja específico: diga o objetivo, o público e o formato (planilha, Word, lista…).</li>
           <li>Dê contexto: nomes, valores, prazos. Quanto mais detalhe, melhor.</li>
-          <li>Se a Marina perguntar antes de responder, é o método “especificação primeiro” — responda as perguntas e ela entrega certinho.</li>
+          <li>Se a Squid perguntar antes de responder, é o método “especificação primeiro” — responda as perguntas e ela entrega certinho.</li>
           <li>Peça ajustes: “deixe mais formal”, “adicione uma coluna de desconto”, “resuma em 5 itens”.</li>
         </ul>
       </section>
@@ -127,7 +127,7 @@ export default function ManualPage() {
           <li><strong>Não acessa sistemas internos</strong> (ERP, base de clientes, e-mail, agenda) — não há integração.</li>
           <li><strong>Não executa ações</strong>: não envia e-mails, não agenda, não acessa links/contas em seu nome.</li>
           <li><strong>Não entende imagens nem áudio</strong> — só texto e arquivos lidos como texto.</li>
-          <li><strong>Conhecimento da Alpha 1 é limitado ao que foi configurado</strong> — não há base interna de documentos (sem RAG); pode não saber detalhes específicos da empresa.</li>
+          <li><strong>Conhecimento da Squid Telecom é limitado ao que foi configurado</strong> — não há base interna de documentos (sem RAG); pode não saber detalhes específicos da empresa.</li>
           <li><strong>Cotação com preço real</strong> (passagens, materiais) só por busca na web <strong>não é confiável</strong> — confirme sempre na fonte oficial.</li>
           <li><strong>Sem memória entre conversas</strong>: cada conversa é isolada; ela só “lembra” do histórico da conversa atual.</li>
           <li><strong>Conversas muito longas</strong> perdem as mensagens mais antigas (janela de contexto limitada).</li>
@@ -135,13 +135,13 @@ export default function ManualPage() {
           <li><strong>Busca na web é parcial</strong>: lê algumas páginas (não a internet toda) e os resultados podem estar desatualizados.</li>
           <li><strong>Respostas têm tamanho máximo</strong> — textos muito longos podem ser cortados (peça “continue” para seguir).</li>
           <li><strong>Pode ficar mais lenta</strong> em horários de pico ou se o provedor de IA oscilar.</li>
-          <li><strong>Conteúdo sensível</strong>: evite enviar dados pessoais/sigilosos desnecessários; a Marina é uma ferramenta de apoio, não substitui o julgamento humano.</li>
+          <li><strong>Conteúdo sensível</strong>: evite enviar dados pessoais/sigilosos desnecessários; a Squid é uma ferramenta de apoio, não substitui o julgamento humano.</li>
         </ul>
-        <p><strong>Em caso de problema de acesso, fale com o administrador da Alpha 1.</strong></p>
+        <p><strong>Em caso de problema de acesso, fale com o administrador da Squid Telecom.</strong></p>
       </section>
 
       <footer className="manual-foot">
-        <a className="manual-cta" href="/chat">Abrir a Marina →</a>
+        <a className="manual-cta" href="/chat">Abrir a Squid →</a>
         <a className="manual-back" href="/">← Início</a>
       </footer>
     </article>

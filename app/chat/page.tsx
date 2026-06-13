@@ -26,14 +26,14 @@ interface Conversation {
 }
 
 const SUGGESTIONS = [
-  "Quais serviços a Alpha 1 oferece?",
+  "Quais serviços a Squid Telecom oferece?",
   "O que é internet com velocidade simétrica?",
   "Como funciona o suporte técnico 24 horas?",
   "Quais as vantagens de IPs fixos e válidos?",
 ];
 
 // Histórico fica no dispositivo de cada usuário, com chave por usuário.
-const storageKeyFor = (user: string) => `alpha1-conversations:${user}`;
+const storageKeyFor = (user: string) => `squid-conversations:${user}`;
 
 function uid() {
   // ID criptograficamente único — evita colisão entre usuários (que, com a
@@ -106,7 +106,7 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
 // react-markdown + GFM (tabelas, listas de tarefas, ~strike~) + KaTeX (equações)
 // + CodeBlock custom (highlight.js + botão copiar). Memoizado para não reparsear
 // todas as mensagens a cada token durante o streaming.
-// Cartão de planilha: detecta o bloco ```alpha1-sheet, mostra prévia e botão de
+// Cartão de planilha: detecta o bloco ```squid-sheet, mostra prévia e botão de
 // download (.xlsx gerado em /api/spreadsheet). Durante o streaming o JSON pode
 // estar incompleto — nesse caso mostramos "preparando".
 function SheetCard({ json }: { json: string }) {
@@ -188,7 +188,7 @@ function SheetCard({ json }: { json: string }) {
   );
 }
 
-// Cartão de documento Word: detecta o bloco ```alpha1-doc, mostra prévia e
+// Cartão de documento Word: detecta o bloco ```squid-doc, mostra prévia e
 // botão de download (.docx gerado em /api/document).
 function DocCard({ json }: { json: string }) {
   const [downloading, setDownloading] = useState(false);
@@ -334,10 +334,10 @@ const MessageContent = memo(function MessageContent({ content, sources }: { cont
           const match = /language-([\w-]+)/.exec(className || "");
           const text = String(children).replace(/\n$/, "");
           // Blocos especiais → cartões com prévia + download.
-          if (match?.[1] === "alpha1-sheet") {
+          if (match?.[1] === "squid-sheet") {
             return <SheetCard json={text} />;
           }
-          if (match?.[1] === "alpha1-doc") {
+          if (match?.[1] === "squid-doc") {
             return <DocCard json={text} />;
           }
           if (match || text.includes("\n")) {
@@ -1024,7 +1024,7 @@ export default function ChatPage() {
     if (!current) return;
     const lines = [`# ${current.title}\n`];
     for (const m of current.messages) {
-      lines.push(m.role === "user" ? `**Você:** ${m.content}` : `**Marina Assistente:** ${m.content}`);
+      lines.push(m.role === "user" ? `**Você:** ${m.content}` : `**Squid IA:** ${m.content}`);
       lines.push("");
     }
     const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
@@ -1161,7 +1161,7 @@ export default function ChatPage() {
     return (
       <div className="login-screen">
         <div className="login-card">
-          <img src="/logo-alpha1.png" alt="Alpha 1" />
+          <img src="/logo-squid.svg" alt="Squid Telecom" />
           <p>Carregando…</p>
         </div>
       </div>
@@ -1172,9 +1172,9 @@ export default function ChatPage() {
     return (
       <div className="login-screen">
         <div className="login-card">
-          <img src="/logo-alpha1.png" alt="Alpha 1" />
+          <img src="/logo-squid.svg" alt="Squid Telecom" />
           <h1>Entrar</h1>
-          <p>Entre com seu e-mail e senha para usar a Marina Assistente.</p>
+          <p>Entre com seu e-mail e senha para usar a Squid IA.</p>
           <form onSubmit={login}>
             <input
               type="email"
@@ -1200,9 +1200,9 @@ export default function ChatPage() {
           </form>
           {loginError && <div className="login-error">{loginError}</div>}
           <p className="login-help">
-            Acesso restrito aos funcionários da Alpha 1. Sem acesso? Fale com o administrador.
+            Acesso restrito aos funcionários da Squid Telecom. Sem acesso? Fale com o administrador.
           </p>
-          <a className="login-back" href="/manual">📘 Como usar a Marina (manual)</a>
+          <a className="login-back" href="/manual">📘 Como usar a Squid (manual)</a>
           <a className="login-back" href="/">← Voltar ao início</a>
         </div>
       </div>
@@ -1287,7 +1287,7 @@ export default function ChatPage() {
         <textarea
           ref={textareaRef}
           value={input}
-          placeholder={attachedFile ? "Adicione uma pergunta ou envie para resumir…" : "Envie uma mensagem para a Marina Assistente"}
+          placeholder={attachedFile ? "Adicione uma pergunta ou envie para resumir…" : "Envie uma mensagem para a Squid IA"}
           rows={1}
           onChange={(e) => {
             setInput(e.target.value);
@@ -1309,7 +1309,7 @@ export default function ChatPage() {
           </button>
         )}
       </div>
-      <div className="disclaimer">Marina Assistente pode cometer erros. Confira informações importantes.</div>
+      <div className="disclaimer">Squid IA pode cometer erros. Confira informações importantes.</div>
       <div className="kbd-hint">
         <span><kbd>↑</kbd> editar última mensagem</span>
         <span><kbd>Esc</kbd> parar</span>
@@ -1325,8 +1325,8 @@ export default function ChatPage() {
       <aside className="sidebar">
         <div className="sidebar-top">
           <div className="brand">
-            <img src="/logo-alpha1.png" alt="Alpha 1" />
-            <span>Marina Assistente</span>
+            <img src="/logo-squid.svg" alt="Squid Telecom" />
+            <span>Squid IA</span>
             <button
               className="collapse-btn"
               onClick={toggleSidebarCollapsed}
@@ -1436,7 +1436,7 @@ export default function ChatPage() {
             <span className="ava">{initial}</span>
             <span className="txt">
               <span className="name-line" title={displayLabel}>{displayLabel}</span>
-              <small title={userName ? user : undefined}>{userName ? user : "Funcionário Alpha 1"}</small>
+              <small title={userName ? user : undefined}>{userName ? user : "Funcionário Squid Telecom"}</small>
             </span>
             <button className="logout-btn" onClick={logout} aria-label="Sair" title="Sair">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -1463,7 +1463,7 @@ export default function ChatPage() {
             </svg>
           </button>
           <div className="model">
-            <span className="brand-name">Marina Assistente</span>
+            <span className="brand-name">Squid IA</span>
             {/* Seletor de modelo oculto: o usuário não troca de modelo. */}
             <small>{status === "online" ? modelLabel : "offline"}</small>
           </div>
@@ -1536,7 +1536,7 @@ export default function ChatPage() {
 
         {messages.length === 0 ? (
           <div className="greeting">
-            <img src="/logo-alpha1.png" alt="Alpha 1" />
+            <img src="/logo-squid.svg" alt="Squid Telecom" />
             <h1>Olá, {firstName} 👋</h1>
             <div className="composer-wrap">
               {composer}
@@ -1600,10 +1600,10 @@ export default function ChatPage() {
                   ) : (
                     <div className="row assistant" key={i}>
                       <div className="avatar">
-                        <img src="/logo-alpha1.png" alt="A1" />
+                        <img src="/logo-squid.svg" alt="A1" />
                       </div>
                       <div className="content">
-                        <div className="name">Marina Assistente</div>
+                        <div className="name">Squid IA</div>
                         {m.content === "" ? (
                           <span className="typing">
                             <span />
@@ -1661,10 +1661,10 @@ export default function ChatPage() {
                 {waitingForFirstToken && (
                   <div className="row assistant">
                     <div className="avatar">
-                      <img src="/logo-alpha1.png" alt="A1" />
+                      <img src="/logo-squid.svg" alt="A1" />
                     </div>
                     <div className="content">
-                      <div className="name">Marina Assistente</div>
+                      <div className="name">Squid IA</div>
                       <span className="typing">
                         <span />
                         <span />

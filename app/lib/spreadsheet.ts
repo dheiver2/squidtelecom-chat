@@ -1,6 +1,6 @@
 // ============================================================
 // Tipos e validação do payload de planilha financeira.
-// O assistente emite um bloco ```alpha1-sheet com este JSON;
+// O assistente emite um bloco ```squid-sheet com este JSON;
 // o frontend mostra prévia + botão de download, que chama
 // /api/spreadsheet para gerar o .xlsx real (exceljs).
 // ============================================================

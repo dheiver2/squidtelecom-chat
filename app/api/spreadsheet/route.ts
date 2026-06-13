@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
   try {
     const wb = new ExcelJS.Workbook();
-    wb.creator = "Marina Assistente";
+    wb.creator = "Squid IA";
     wb.created = new Date();
 
     for (const sheet of spec.sheets) {

@@ -3,9 +3,9 @@ import "highlight.js/styles/github-dark.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Marina Assistente",
-  description: "Assistente virtual inteligente da Alpha 1 Consultoria — telecom, gestão e TI.",
-  icons: { icon: "/logo-alpha1.png" },
+  title: "Squid IA",
+  description: "Assistente virtual inteligente da Squid Telecom — telecomunicações, conectividade e inovação.",
+  icons: { icon: "/logo-squid.svg" },
 };
 
 // HTML sempre dinâmico → não é cacheado como estático (sem s-maxage de 1 ano).
@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
       </head>

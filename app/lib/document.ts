@@ -1,6 +1,6 @@
 // ============================================================
 // Tipos e validação do payload de documento Word (.docx).
-// O assistente emite um bloco ```alpha1-doc com este JSON; o frontend
+// O assistente emite um bloco ```squid-doc com este JSON; o frontend
 // mostra prévia + botão de download, que chama /api/document.
 // ============================================================
 

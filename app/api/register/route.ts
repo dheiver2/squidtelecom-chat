@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 // chame a rota diretamente.
 export async function POST() {
   return Response.json(
-    { error: "Cadastro indisponível. As contas são criadas pelo administrador da Alpha 1." },
+    { error: "Cadastro indisponível. As contas são criadas pelo administrador da Squid Telecom." },
     { status: 403 }
   );
 }

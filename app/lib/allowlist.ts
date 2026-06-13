@@ -1,5 +1,5 @@
 // ============================================================
-// Lista de e-mails autorizados (funcionários da Alpha 1).
+// Lista de e-mails autorizados (funcionários da Squid Telecom).
 // Só estes e-mails podem criar conta (auto-cadastro restrito).
 // O login é por e-mail. Para liberar alguém, adicione aqui.
 // ============================================================

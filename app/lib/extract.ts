@@ -110,7 +110,7 @@ export async function fetchAndExtract(url: string): Promise<string> {
       headers: {
         // UA de navegador — muitos sites bloqueiam clientes sem UA.
         "User-Agent":
-          "Mozilla/5.0 (compatible; Alpha1Assistant/1.0; +https://alpha1.local)",
+          "Mozilla/5.0 (compatible; SquidAssistant/1.0; +https://squid.local)",
         Accept: "text/html,application/xhtml+xml",
       },
     });
