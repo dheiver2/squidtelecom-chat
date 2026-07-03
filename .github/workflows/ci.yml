@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      # next lint pede configuracao interativa (nao ha .eslintrc versionado
+      # neste repo), entao nao roda de forma nao-interativa em CI. O build
+      # abaixo ja roda lint + checagem de tipos do Next internamente.
+      - name: Build (inclui lint e checagem de tipos do Next)
+        run: npm run build
+
+      - name: Test
+        run: npm test
