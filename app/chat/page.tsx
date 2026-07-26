@@ -915,7 +915,7 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: apiMessages, model: modelId, searchResults, searchQuery, agent: agentId, image: lastUserImage }),
+        body: JSON.stringify({ messages: apiMessages, model: modelId, searchResults, searchQuery, agent: agentId, image: lastUserImage, conversationId: targetId }),
         signal: controller.signal,
       });
 

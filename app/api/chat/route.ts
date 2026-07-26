@@ -104,6 +104,63 @@ type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 /** Estimativa leve de tokens (sem lib pesada no Edge): ~4 chars por token. */
 const estTokens = (s: string) => Math.ceil(s.length / 4);
 
+// ── Mangaba Gateway (provedor PRINCIPAL) ──────────────────────────────
+// Self-hosted, exposto via ngrok. Endpoint próprio (não OpenAI-compatible):
+// recebe a última mensagem do usuário via FormData e mantém o histórico da
+// conversa do lado dele por session_id. Se falhar/indisponível, o handler
+// cai para o fluxo Hugging Face já existente (mais abaixo).
+function gatewayUrl(): string {
+  return (process.env.MANGABA_GATEWAY_URL || "https://mangaba.ngrok.app").replace(/\/$/, "");
+}
+
+/** Chama o Mangaba Gateway. Retorna a resposta em texto, ou `null` quando o
+ *  gateway está indisponível/falhou (status != 2xx, exceção de rede/timeout,
+ *  ou corpo sem `response` string não-vazia) — sinal para usar o fallback HF. */
+async function chatWithGateway(sessionId: string, message: string): Promise<string | null> {
+  const baseUrl = gatewayUrl();
+  const form = new FormData();
+  form.append("session_id", sessionId);
+  form.append("message", message);
+  try {
+    const res = await fetch(`${baseUrl}/chat`, {
+      method: "POST",
+      headers: { "ngrok-skip-browser-warning": "1" },
+      body: form,
+      signal: AbortSignal.timeout(60_000),
+    });
+    if (!res.ok) {
+      await res.text().catch(() => ""); // drena corpo de erro
+      return null;
+    }
+    const data = await res.json().catch(() => null);
+    // ChatResponse esperado: { session_id, response, history_length }
+    const text = data && typeof data.response === "string" ? data.response : "";
+    return text ? text : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Responde com o texto completo do Mangaba Gateway usando o MESMO contrato
+ *  (Content-Type/headers) do streaming HF abaixo — só que em um único chunk,
+ *  já que o gateway não faz streaming token-a-token. */
+function plainTextStream(text: string): Response {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(encoder.encode(text));
+      controller.close();
+    },
+  });
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
+    },
+  });
+}
+
 export async function POST(req: Request) {
   const username = await readSessionEdge(req.headers.get("cookie"));
   if (!username) {
@@ -124,6 +181,7 @@ export async function POST(req: Request) {
   let searchQuery = "";
   let agent = "";
   let imageDataUrl = "";
+  let conversationId = "";
   try {
     const body = await req.json();
     messages = body.messages;
@@ -138,6 +196,9 @@ export async function POST(req: Request) {
     if (typeof body.image === "string" && body.image.startsWith("data:image/")) {
       imageDataUrl = body.image;
     }
+    // Id da conversa (sidebar de histórico) — usado para compor o session_id
+    // do Mangaba Gateway, que mantém o histórico por conversa do lado dele.
+    if (typeof body.conversationId === "string") conversationId = body.conversationId.trim();
     if (!Array.isArray(messages)) throw new Error();
 
     // Validação básica
@@ -157,6 +218,31 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ error: "Corpo da requisição inválido." }), {
       status: 400, headers: { "Content-Type": "application/json" },
     });
+  }
+
+  // ── Mangaba Gateway PRIMEIRO ─────────────────────────────────────────
+  // Tenta o gateway self-hosted antes de qualquer chamada ao Hugging Face.
+  // Pulamos o gateway (indo direto para o fluxo HF abaixo) em dois casos que
+  // ele não sabe atender hoje:
+  //  - visão (imagem anexada): o gateway /chat não recebe imagem aqui; quem
+  //    faz isso é o modelo de visão da HF (OPENAI_VISION_MODEL);
+  //  - planilha/documento: as respostas nesses casos precisam terminar com
+  //    um bloco squid-sheet/squid-doc, formato ensinado só pelo system
+  //    prompt do fluxo HF (buildSystemPrompt) — o gateway não o recebe.
+  // Qualquer outro pedido de texto tenta o gateway; se ele falhar/estiver
+  // indisponível (retorno null), cai para o Hugging Face normalmente.
+  const lastUserForGateway = [...messages].reverse().find((m) => m.role === "user");
+  const lastUserTextForGateway = lastUserForGateway?.content ?? "";
+  const gatewayEligible =
+    !imageDataUrl &&
+    !!lastUserForGateway &&
+    agent !== "documentos" &&
+    !SHEET_RE.test(lastUserTextForGateway) &&
+    !DOC_RE.test(lastUserTextForGateway);
+  if (gatewayEligible) {
+    const sessionId = `${username}:${conversationId || "default"}`;
+    const gatewayText = await chatWithGateway(sessionId, lastUserForGateway!.content);
+    if (gatewayText != null) return plainTextStream(gatewayText);
   }
 
   // ── Truncar histórico (por contagem) ───────────────────────────────
